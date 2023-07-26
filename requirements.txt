@@ -1,0 +1,3 @@
+recurring-ical-events>=2
+urllib3>=2
+tzlocal>=5
