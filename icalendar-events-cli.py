@@ -101,16 +101,23 @@ def SortEvents(args, events):
 
 def OutputEvents(args, events):
   if(args.outputFormat == OutputFormat.JSON):
-    event_array = [ {
-                      "start:": GetEventDtStart(event).isoformat(),
+    events_output = []
+    for event in events:
+      event_output = {"start:": GetEventDtStart(event).isoformat(),
                       "end": GetEventDtEnd(event).isoformat(),
-                      "summary": GetEventSummary(args, event)
-                    } for event in events]
+                      "summary": GetEventSummary(args, event)}
+      description = GetEventDescription(args, event)
+      if(description != None): event_output["description"] = description
+
+      location = GetEventLocation(args, event)
+      if(location != None): event_output["location"] = location
+      events_output.append(event_output)
+
     json_hierarchy = {
       "startDate": args.startDate.isoformat(),
       "endDate": args.endDate.isoformat(),
       "summaryFilter" : args.summaryFilter,
-      "events": event_array
+      "events": events_output
       }
     json_string = json.dumps(json_hierarchy, indent = 2, ensure_ascii=False)
     print(json_string)
@@ -121,16 +128,34 @@ def OutputEvents(args, events):
     logging.info(f"Number of Events: {len(events)}")
 
     for event in events:
-      summary = GetEventSummary(args, event)
       start = GetEventDtStart(event)
       end = GetEventDtEnd(event)
+      summary = GetEventSummary(args, event)
+      description = GetEventDescription(args, event)
+      location = GetEventLocation(args, event)
+
       duration = end - start
       start_end_string = f"{start.isoformat()} -> {end.isoformat()} [{duration.total_seconds():.0f} sec]"
-      logging.info(f"{start_end_string : <70} | {summary}")
+      opt_description_string = f" | Description: {description}" if description != None else ""
+      opt_location_string = f" | Location: {description}" if location != None else ""
+
+      logging.info(f"{start_end_string : <70} | {summary}{opt_description_string}{opt_location_string}")
 
 # ---- icalender access utilities ----
+def GetEventStringAttribute(args, event, attribute_name):
+  attribute = event.decoded(attribute_name, default=None)
+  if(attribute != None):
+    attribute = attribute.decode(args.encoding)
+  return attribute
+
 def GetEventSummary(args, event):
-  return event.decoded('SUMMARY').decode(args.encoding)
+  return GetEventStringAttribute(args, event, 'SUMMARY')
+
+def GetEventDescription(args, event):
+  return GetEventStringAttribute(args, event, 'DESCRIPTION')
+
+def GetEventLocation(args, event):
+  return GetEventStringAttribute(args, event, 'LOCATION')
 
 def GetEventDtStart(event):
   start = event.decoded('DTSTART')
