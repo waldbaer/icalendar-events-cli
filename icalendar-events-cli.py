@@ -103,8 +103,8 @@ def OutputEvents(args, events):
   if(args.outputFormat == OutputFormat.JSON):
     events_output = []
     for event in events:
-      event_output = {"start:": GetEventDtStart(event).isoformat(),
-                      "end": GetEventDtEnd(event).isoformat(),
+      event_output = {"startDate": GetEventDtStart(event).isoformat(),
+                      "endDate": GetEventDtEnd(event).isoformat(),
                       "summary": GetEventSummary(args, event)}
       description = GetEventDescription(args, event)
       if(description != None): event_output["description"] = description
