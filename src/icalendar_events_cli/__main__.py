@@ -3,6 +3,7 @@
 # ---- Imports --------------------------------------------------------------------------------------------------------
 import importlib.metadata
 import os
+from typing import Optional
 
 from .argparse import parse_config
 from .downloader import download_ics
@@ -18,7 +19,7 @@ __author__ = "Sebastian Waldvogel"
 # ---- Main -----------------------------------------------------------------------------------------------------------
 
 
-def cli(arg_list: list[str] | None = None) -> int:
+def cli(arg_list: Optional[list[str]] = None) -> int:
     """Main command line handling entry point.
 
     Arguments:

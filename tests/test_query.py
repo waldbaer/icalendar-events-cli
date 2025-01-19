@@ -6,6 +6,7 @@ import re
 from base64 import b64encode
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 
 import pytest
 from pytest_httpserver import HTTPServer
@@ -19,10 +20,10 @@ class ExpectedEvent:
     """Expectation of an event and it's data (summary, description, location, ...)."""
 
     summary: str
-    description: str | None
-    location: str | None
+    description: Optional[str]
+    location: Optional[str]
 
-    def __init__(self, summary: str, description: str | None = None, location: str | None = None) -> None:
+    def __init__(self, summary: str, description: Optional[str] = None, location: Optional[str] = None) -> None:
         """Construct.
 
         Arguments:
