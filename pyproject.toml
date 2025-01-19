@@ -12,6 +12,9 @@ dependencies = [
     "tzlocal==5.2",
     "pytz==2024.2",
     "requests>=2.32.3",
+    "jsonargparse>=4.36.0",
+    "rich-argparse>=1.6.0",
+    "pydantic>=2.10.5",
 ]
 
 [project.scripts]

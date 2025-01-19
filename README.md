@@ -42,27 +42,38 @@ pip install .
 For details about the command line arguments please refer to the online help.
 
 ```
-usage: icalendar-events-cli [-h] [--version] [--verbose] -u URL [-b BASICAUTH] [-f SUMMARYFILTER] [-s STARTDATE] -e ENDDATE [-o {logger,json}] [-c ENCODING]
+Usage: icalendar-events-cli [-h] [--version] [-c CONFIG] [--calendar.url URL] [--calendar.verify-url {true,false}]
+                            [--calendar.user USER] [--calendar.password PASSWORD] [--calendar.encoding ENCODING] [-f SUMMARY]
+                            [-s START_DATE] [-e END_DATE] [--output.format {human_readable,json}] [-o FILE]
 
-Command-line tool to read events from a iCalendar (ICS).
+Command-line tool to read events from a iCalendar (ICS) files. | Version 1.0.0 | Copyright 2023-2025
 
-options:
-  -h, --help            show this help message and exit
-  --version             show program's version number and exit
-  --verbose, -v         Increase log-level. -v: INFO, -vv DEBUG, ... Default: WARNING
-  -u, --url URL         icalendar URL to be parsed.
-  -b, --basicAuth BASICAUTH
-                        Basic authentication for URL in format "<user>:<password>".
-  -f, --summaryFilter SUMMARYFILTER
-                        RegEx to filter calendar events based on summary field.
-  -s, --startDate STARTDATE
-                        Start date/time of event filter by time (ISO format). Default: now
-  -e, --endDate ENDDATE
-                        End date/time of event filter by time (ISO format).
-  -o, --outputFormat {logger,json}
-                        Output format.
-  -c, --encoding ENCODING
-                        Encoding of the calendar. Default: UTF-8
+Default Config File Locations:
+  ['./config.json'], Note: default values below are the ones overridden by the contents of: ./config.json
+
+Options:
+  -h, --help            Show this help message and exit.
+  --version             Print version and exit.
+  -c, --config CONFIG   Path to JSON configuration file.
+  --calendar.url URL    URL of the iCalendar (ICS) (type: None, default: None)
+  --calendar.verify-url {true,false}
+                        Configure SSL verification of the URL (type: None, default: True)
+  --calendar.user USER  Username for calendar URL HTTP authentication (basic authentication) (type: None, default: None)
+  --calendar.password PASSWORD
+                        Password for calendar URL HTTP authentication (basic authentication) (type: None, default: None)
+  --calendar.encoding ENCODING
+                        Encoding of the calendar (default: UTF-8)
+  -f, --filter.summary SUMMARY
+                        RegEx to filter calendar events based on summary field. (default: .*)
+  -s, --filter.start-date START_DATE
+                        Start date/time of event filter by time (ISO format). Default: now (type: _datetime_fromisoformat, default: 2025-01-21 21:29:13+01:00)
+  -e, --filter.end-date END_DATE
+                        End date/time of event filter by time (ISO format). Default: end of today (type: _datetime_fromisoformat, default: 2025-01-21 23:59:59+01:00)
+  --output.format {human_readable,json}
+                        Output format. (type: None, default: human_readable)
+  -o, --output.file FILE
+                        Path of JSON output file. If not set the output is written to console / stdout (type: None, default: None)
+
 ```
 
 ### Examples
@@ -71,8 +82,8 @@ options:
 
 ```
 icalendar-events-cli --url https://www.thunderbird.net/media/caldata/autogen/GermanHolidays.ics \
-  --startDate $(date +%Y)-01-01T02:00:00+02:00 \
-  --endDate $(date +%Y)-12-31T02:00:00+01:00 \
+  --filter.start-date $(date +%Y)-01-01T02:00:00+02:00 \
+  --filter.end-date $(date +%Y)-12-31T02:00:00+01:00 \
   -f ".*(Weihnacht|Oster).*"
 Start Date:       2025-01-01T02:00:00+02:00
 End Date:         2025-12-31T02:00:00+01:00
@@ -89,23 +100,23 @@ The machine-readable JSON output format is designed for seamless integration wit
 
 ```
 icalendar-events-cli --url https://www.thunderbird.net/media/caldata/autogen/GermanHolidays.ics \
-  --startDate $(date +%Y)-01-01T02:00:00+02:00 \
-  --endDate $(date +%Y)-12-31T02:00:00+01:00 \
-  -f ".*Pfingst.*" --outputFormat json
+  --filter.start-date $(date +%Y)-01-01T02:00:00+02:00 \
+  --filter.end-date $(date +%Y)-12-31T02:00:00+01:00 \
+  -f ".*Pfingst.*" --output.format json
 {
-  "startDate": "2025-01-01T02:00:00+02:00",
-  "endDate": "2025-12-31T02:00:00+01:00",
-  "summaryFilter": ".*Pfingst.*",
+  "start-date": "2025-01-01T02:00:00+02:00",
+  "end-date": "2025-12-31T02:00:00+01:00",
+  "summary-filter": ".*Pfingst.*",
   "events": [
     {
-      "startDate": "2025-06-08T00:00:00+02:00",
-      "endDate": "2025-06-09T23:59:59+02:00",
+      "start-date": "2025-06-08T00:00:00+02:00",
+      "end-date": "2025-06-09T23:59:59+02:00",
       "summary": "Pfingstsonntag  (Brandenburg)",
       "description": "Common local holiday -  Pfingsten ist ein christlicher Feiertag, um an die Herabkunft des Heiligen Geistes auf die Nachfolger Jesu zu erinnern."
     },
     {
-      "startDate": "2025-06-09T00:00:00+02:00",
-      "endDate": "2025-06-10T23:59:59+02:00",
+      "start-date": "2025-06-09T00:00:00+02:00",
+      "end-date": "2025-06-10T23:59:59+02:00",
       "summary": "Pfingstmontag ",
       "description": "Christian -  Der zweite Pfingsttag ist, der auf den Montag nach Pfingsten (oder Pfingstsonntag) fällt, ist ein gesetzlicher Feiertag in Deutschland."
     }

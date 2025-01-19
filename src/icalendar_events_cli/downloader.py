@@ -8,20 +8,19 @@ import requests
 # ---- Functions -------------------------------------------------------------------------------------------------------
 
 
-def download_ics(args: dict) -> str:
+def download_ics(calendard_config: dict) -> str:
     """Download ICS calendar file from URL.
 
     Arguments:
-        args: Configuration hierarchy.
+        calendard_config: Calendar configuration hierarchy.
 
     Returns:
         str: Downloaded file content.
     """
     session = requests.Session()
-    if args.basicAuth is not None:
-        user_password = args.basicAuth.split(":")
-        session.auth = (user_password[0], user_password[1])
-    response = session.get(url=args.url)
+    if calendard_config.user is not None and calendard_config.password is not None:
+        session.auth = (calendard_config.user.get_secret_value(), calendard_config.password.get_secret_value())
+    response = session.get(url=calendard_config.url, verify=calendard_config.verify_url)
     if response.status_code != 200:
         print(
             f"ERROR: Failed to download ical contents from URL '{response.url}'. "

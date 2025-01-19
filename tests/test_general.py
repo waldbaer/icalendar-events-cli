@@ -22,7 +22,7 @@ def test_ct_help(capsys: pytest.CaptureFixture[str]) -> None:
     cli_result = run_cli(args, capsys)
 
     assert cli_result.exit_code == os.EX_OK
-    assert cli_result.stdout.startswith(f"usage: {__prog__}")
+    assert cli_result.stdout.startswith(f"Usage: {__prog__}")
 
 
 def test_ct_version(capsys: pytest.CaptureFixture[str]) -> None:
@@ -46,7 +46,7 @@ def test_ct_invalid_arguments(capsys: pytest.CaptureFixture[str]) -> None:
     Arguments:
         capsys: System capture
     """
-    args = "--startDate 2025"
+    args = "--filter.start-date 2025"
 
     cli_result = run_cli(args, capsys)
     assert cli_result.exit_code != os.EX_OK

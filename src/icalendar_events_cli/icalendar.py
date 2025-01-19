@@ -20,92 +20,97 @@ __local_timezone = pytz.timezone(get_localzone().key)
 # ---- Functions -------------------------------------------------------------------------------------------------------
 
 
-def parse_calendar(args: dict, calendar_ics: str) -> CalendarQuery:
+def parse_calendar(calendar_ics: str, filter_config: dict) -> CalendarQuery:
     """Parse the calendar.
 
     Arguments:
-        args: Configuration hierarchy.
         calendar_ics: Calendar RAW content string.
+        filter_config: Filter configuration hierarchy.
 
     Returns:
         CalendarQuery: Parsed CalendarQuery.
     """
     calendar = icalendar.Calendar.from_ical(calendar_ics)
     calendar_components = ["VEVENT"]  # Only events
-    return recurring_ical_events.of(calendar, components=calendar_components).between(args.startDate, args.endDate)
+    return recurring_ical_events.of(calendar, components=calendar_components).between(
+        filter_config.start_date, filter_config.end_date
+    )
 
 
-def filter_events(events: CalendarQuery, summary_filter: str, encoding: str) -> CalendarQuery:
+def filter_events(events: CalendarQuery, filter_config: dict, encoding: str) -> CalendarQuery:
     """Filter the calendar.
 
     Arguments:
         events: Calendar to be filtered.
-        summary_filter: Events summary filter expression (RegEx)
+        filter_config: Filter config hierarchy
         encoding: Summary attribute encoding
 
     Returns:
         CalendarQuery: Filtered calendar.
     """
-    return filter(
-        lambda event: re.match(summary_filter, event.decoded("SUMMARY").decode(encoding)) is not None,
-        events,
-    )
+    if filter_config.summary is not None:
+        events = filter(
+            lambda event: re.match(filter_config.summary, get_event_summary(event, encoding)) is not None,
+            events,
+        )
+
+    return events
 
 
-def get_event_string_attribute(args: dict, event: Event, attribute_name: str) -> str:
+def get_event_string_attribute(event: Event, attribute_name: str, encoding: str) -> str:
     """Get any string attribute from event.
 
     Arguments:
-        args: Configuration hierarchy including the encoding settings.
         event: Calendar Event.
         attribute_name: Attribute name to be accessed.
+        encoding: Calender encoding.
 
     Returns:
         Decoded attribute value.
     """
     attribute = event.decoded(attribute_name, default=None)
     if attribute is not None:
-        attribute = attribute.decode(args.encoding)
+        attribute = attribute.decode(encoding)
     return attribute
 
 
-def get_event_summary(args: dict, event: Event) -> str:
+def get_event_summary(event: Event, encoding: str) -> str:
     """Get 'SUMMARY' attribute of calendar event.
 
     Arguments:
-        args: Configuration hierarchy including the output settings.
         event: Calendar Event.
+        encoding: Calendar encoding
 
     Returns:
         Summary attribute.
     """
-    return get_event_string_attribute(args, event, "SUMMARY")
+    return get_event_string_attribute(event, "SUMMARY", encoding)
 
 
-def get_event_description(args: dict, event: Event) -> str:
+def get_event_description(event: Event, encoding: str) -> str:
     """Get 'DESCRIPTION' attribute of calendar event.
 
     Arguments:
-        args: Configuration hierarchy including the output settings.
         event: Calendar Event.
+        encoding: Calendar encoding
 
     Returns:
         Description attribute.
     """
-    return get_event_string_attribute(args, event, "DESCRIPTION")
+    return get_event_string_attribute(event, "DESCRIPTION", encoding)
 
 
-def get_event_location(args: dict, event: Event) -> str:
+def get_event_location(event: Event, encoding: str) -> str:
     """Get 'LOCATION' attribute of calendar event.
 
     Arguments:
-        args: Configuration hierarchy including the output settings.
         event: Calendar Event.
+        encoding: Calendar encoding
 
     Returns:
         Location attribute.
     """
-    return get_event_string_attribute(args, event, "LOCATION")
+    return get_event_string_attribute(event, "LOCATION", encoding)
 
 
 def get_event_dtstart(event: Event) -> date:
