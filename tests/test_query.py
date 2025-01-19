@@ -20,8 +20,8 @@ class ExpectedEvent:
     """Expectation of an event and it's data (summary, description, location, ...)."""
 
     summary: str
-    description: str | None
-    location: str | None
+    description: Optional[str]
+    location: Optional[str]
 
     def __init__(self, summary: str, description: Optional[str] = None, location: Optional[str] = None) -> None:
         """Construct.

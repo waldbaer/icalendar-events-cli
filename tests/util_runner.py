@@ -4,6 +4,7 @@ import json
 import shlex
 from ast import Dict
 from dataclasses import dataclass
+from typing import Optional
 
 import pytest
 
@@ -18,9 +19,9 @@ class CliResult:
 
     exit_code: int
     stdout: str
-    stdout_as_json: dict | None
+    stdout_as_json: Optional[dict]
 
-    def __init__(self, exit_code: int, stdout: str, stdout_as_json: dict | None = None) -> None:
+    def __init__(self, exit_code: int, stdout: str, stdout_as_json: Optional[dict] = None) -> None:
         """Construct.
 
         Arguments:

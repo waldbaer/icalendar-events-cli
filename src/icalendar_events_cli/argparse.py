@@ -3,6 +3,7 @@
 # ---- Imports ----
 import argparse
 import datetime
+from typing import Optional
 
 import pytz
 from tzlocal import get_localzone
@@ -15,7 +16,7 @@ from .output import OutputFormat
 # ---- CommandLine parser ----------------------------------------------------------------------------------------------
 
 
-def parse_config(prog: str, version: str, copy_right: str, author: str, arg_list: list[str] | None = None) -> dict:
+def parse_config(prog: str, version: str, copy_right: str, author: str, arg_list: Optional[list[str]] = None) -> dict:
     """Parse the configuration from CLI and/or configuration JSON file.
 
     Arguments:
