@@ -1,6 +1,7 @@
 [![PyPI version](https://badge.fury.io/py/icalendar-events-cli.svg)](https://badge.fury.io/py/icalendar-events-cli)
 [![MIT License](https://img.shields.io/github/license/waldbaer/icalendar-events-cli?style=flat-square)](https://opensource.org/licenses/MIT)
 [![GitHub issues open](https://img.shields.io/github/issues/waldbaer/icalendar-events-cli?style=flat-square)](https://github.com/waldbaer/icalendar-events-cli/issues)
+[![GitHub Actions](https://github.com/waldbaer/icalendar-events-cli/actions/workflows/python-pdm.yml/badge.svg?branch=master)](https://github.com/waldbaer/icalendar-events-cli/actions/workflows/python-pdm.yml)
 
 
 # Command-line tool to read icalendar events
