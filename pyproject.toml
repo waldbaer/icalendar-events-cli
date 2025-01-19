@@ -1,0 +1,98 @@
+[project]
+name = "icalendar-events-cli"
+dynamic = ["version"]
+description = "Command-line tool to read events from a iCalendar (ICS)"
+authors = [{ name = "Sebastian Waldvogel", email = "sebastian@waldvogels.de" }]
+license = { text = "MIT" }
+readme = "README.md"
+
+requires-python = ">=3.9"
+dependencies = [
+    "recurring-ical-events==3.3.3",
+    "tzlocal==5.2",
+    "pytz==2024.2",
+    "requests>=2.32.3",
+]
+
+[project.scripts]
+icalendar-events-cli = "icalendar_events_cli.__main__:cli"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[dependency-groups]
+lint = ["ruff>=0.8.3"]
+pytest = [
+    "pytest-cov>=6.0.0",
+    "pytest_httpserver>=1.1.0",
+]
+docs = ["mkdocs>=1.6.1", "mkdocs-material>=9.5.49"]
+
+[project.urls]
+Repository = "https://github.com/waldbaer/icalendar-events-cli"
+
+# ---- Python PDM ------------------------------------------------------------------------------------------------------
+
+[tool.pdm]
+distribution = true
+
+[tool.pdm.version]
+source = "scm"
+
+[tool.pdm.scripts]
+lint = "ruff check ."
+format = "ruff format ."
+docs = "mkdocs serve"
+tests = "pytest --cov-report term-missing --cov=icalendar_events_cli --cov-fail-under=100 --verbose"
+
+# ---- Ruff ------------------------------------------------------------------------------------------------------------
+
+[tool.ruff]
+include = ["**/*.py", "**/*.pyi", "**/pyproject.toml"]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "ARG",
+    "ANN", # Warnings for missing type annotations
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "D",   # Missing docstrings (autodoc)
+    "DOC", # pydoclint
+    "E",   # pycodestyle - Error
+    "F",   # Pyflakes
+    "I",   # isort
+    "W",   # pycodestyle - Warning
+    "UP",  # pyupgrade
+    #"PL", # Pylint
+]
+extend-select = ["DOC"]
+preview = true
+ignore = ["UP006", "UP035"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["PLC2701"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# ---- pylint ----------------------------------------------------------------------------------------------------------
+
+[tool.pylint]
+load-plugins = ["pylint.extensions.docparams"]
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.main]
+ignore-paths = [".venv", ".git", "__pypackages__", "tests/_temp", "tests"]
+accept-no-param-doc = "no"
+accept-no-raise-doc = "no"
+accept-no-yields-doc = "no"
+default-docstring-type = "google"
+
+# ---- mypy ------------------------------------------------------------------------------------------------------------
+
+[tool.mypy]
+strict = true
