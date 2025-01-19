@@ -27,16 +27,14 @@ Changes can be followed at [CHANGELOG.md](https://github.com/waldbaer/icalendar-
 
 ## Setup
 
-### With pip / pipx
-```
-pip install icalendar-events-cli
-pipx install icalendar-events-cli
-```
-
 ### Setup directly from github repo / clone
 ```
-pdm install
+git clone git@github.com:waldbaer/icalendar-events-cli.git
+cd icalendar-events-cli
+
+python -m venv .venv
 source ./.venv/bin/activate
+pip install .
 ```
 
 ## Usage
@@ -44,8 +42,6 @@ source ./.venv/bin/activate
 For details about the command line arguments please refer to the online help.
 
 ```
-icalendar-events-cli --help
-
 usage: icalendar-events-cli [-h] [--version] [--verbose] -u URL [-b BASICAUTH] [-f SUMMARYFILTER] [-s STARTDATE] -e ENDDATE [-o {logger,json}] [-c ENCODING]
 
 Command-line tool to read events from a iCalendar (ICS).
@@ -78,16 +74,16 @@ icalendar-events-cli --url https://www.thunderbird.net/media/caldata/autogen/Ger
   --startDate $(date +%Y)-01-01T02:00:00+02:00 \
   --endDate $(date +%Y)-12-31T02:00:00+01:00 \
   -f ".*(Weihnacht|Oster).*" -vv
-2025-01-09 19:41:29 DEBUG: Starting new HTTPS connection (1): www.thunderbird.net:443
-2025-01-09 19:41:29 DEBUG: https://www.thunderbird.net:443 "GET /media/caldata/autogen/GermanHolidays.ics HTTP/11" 200 0
-2025-01-09 19:41:29 DEBUG: Get calendar events between 2025-01-01 02:00:00 and 2025-12-31 02:00:00...
-2025-01-09 19:41:29 INFO: Start Date:       2025-01-01T02:00:00+02:00
-2025-01-09 19:41:29 INFO: End Date:         2025-12-31T02:00:00+01:00
-2025-01-09 19:41:29 INFO: Summary Filter:   .*(Weihnacht|Oster).*
-2025-01-09 19:41:29 INFO: Number of Events: 3
-2025-01-09 19:41:29 INFO: 2025-04-20T00:00:00+02:00 -> 2025-04-21T23:59:59+02:00 [172799 sec]    | Ostersonntag  (Brandenburg) | Description: Common local holiday -  Der Ostersonntag ist laut der christlichen Bibel ein Feiertag in Deutschland, um die Auferstehung Jesu Christi zu feiern.
-2025-01-09 19:41:29 INFO: 2025-04-21T00:00:00+02:00 -> 2025-04-22T23:59:59+02:00 [172799 sec]    | Ostermontag  | Description: Christian -  Viele Menschen in Deutschland begehen jährlich den Ostermontag am Tag nach dem Ostersonntag. Es ist in allen Bundesstaaten ein Feiertag.
-2025-01-09 19:41:29 INFO: 2025-12-25T00:00:00+01:00 -> 2025-12-26T23:59:59+01:00 [172799 sec]    | Weihnachten  | Description: Christian -  Der Weihnachtstag markiert die Geburt Jesu Christi und ist ein gesetzlicher Feiertag in Deutschland. Es ist jedes Jahr am 25. Dezember.
+2025-01-19 20:10:40 DEBUG: Starting new HTTPS connection (1): www.thunderbird.net:443
+2025-01-19 20:10:40 DEBUG: https://www.thunderbird.net:443 "GET /media/caldata/autogen/GermanHolidays.ics HTTP/1.1" 200 26910
+2025-01-19 20:10:40 DEBUG: Get calendar events between 2025-01-01 02:00:00 and 2025-12-31 02:00:00...
+2025-01-19 20:10:40 INFO: Start Date:       2025-01-01T02:00:00+02:00
+2025-01-19 20:10:40 INFO: End Date:         2025-12-31T02:00:00+01:00
+2025-01-19 20:10:40 INFO: Summary Filter:   .*(Weihnacht|Oster).*
+2025-01-19 20:10:40 INFO: Number of Events: 3
+2025-01-19 20:10:40 INFO: 2025-04-20T00:00:00+02:00 -> 2025-04-21T23:59:59+02:00 [172799 sec]    | Ostersonntag  (Brandenburg) | Description: Common local holiday -  Der Ostersonntag ist laut der christlichen Bibel ein Feiertag in Deutschland, um die Auferstehung Jesu Christi zu feiern.
+2025-01-19 20:10:40 INFO: 2025-04-21T00:00:00+02:00 -> 2025-04-22T23:59:59+02:00 [172799 sec]    | Ostermontag  | Description: Christian -  Viele Menschen in Deutschland begehen jÃ¤hrlich den Ostermontag am Tag nach dem Ostersonntag. Es ist in allen Bundesstaaten ein Feiertag.
+2025-01-19 20:10:40 INFO: 2025-12-25T00:00:00+01:00 -> 2025-12-26T23:59:59+01:00 [172799 sec]    | Weihnachten  | Description: Christian -  Der Weihnachtstag markiert die Geburt Jesu Christi und ist ein gesetzlicher Feiertag in Deutschland. Es ist jedes Jahr am 25. Dezember.
 ```
 
 #### Example 1: Output as JSON
@@ -116,6 +112,8 @@ icalendar-events-cli --url https://www.thunderbird.net/media/caldata/autogen/Ger
       "summary": "Pfingstmontag ",
       "description": "Christian -  Der zweite Pfingsttag ist, der auf den Montag nach Pfingsten (oder Pfingstsonntag) fällt, ist ein gesetzlicher Feiertag in Deutschland."
     }
+  ]
+}
 ```
 
 ## Acknowledgments
