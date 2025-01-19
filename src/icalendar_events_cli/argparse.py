@@ -46,7 +46,12 @@ def parse_config(prog: str, version: str, copy_right: str, author: str, arg_list
     argparser.add_argument("-c", "--config", action="config", help="""Path to JSON configuration file.""")
 
     # ---- Calendar URL / access ----
-    argparser.add_argument("--calendar.url", type=str, help="URL of the iCalendar (ICS)")
+    argparser.add_argument(
+        "--calendar.url",
+        type=str,
+        help="""URL of the iCalendar (ICS).
+Also URLs to local files with schema file://<absolute path to local file> are supported.""",
+    )
     argparser.add_argument(
         "--calendar.verify-url",
         type=bool,

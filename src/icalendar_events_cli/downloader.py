@@ -4,6 +4,7 @@
 import sys
 
 import requests
+from requests_file import FileAdapter
 
 # ---- Functions -------------------------------------------------------------------------------------------------------
 
@@ -18,6 +19,8 @@ def download_ics(calendard_config: dict) -> str:
         str: Downloaded file content.
     """
     session = requests.Session()
+    session.mount("file://", FileAdapter())
+
     if calendard_config.user is not None and calendard_config.password is not None:
         session.auth = (calendard_config.user.get_secret_value(), calendard_config.password.get_secret_value())
     response = session.get(url=calendard_config.url, verify=calendard_config.verify_url)

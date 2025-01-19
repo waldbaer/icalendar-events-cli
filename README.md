@@ -55,7 +55,8 @@ Options:
   -h, --help            Show this help message and exit.
   --version             Print version and exit.
   -c, --config CONFIG   Path to JSON configuration file.
-  --calendar.url URL    URL of the iCalendar (ICS) (type: None, default: None)
+  --calendar.url URL    URL of the iCalendar (ICS).
+                        Also URLs to local files with schema file://<absolute path to local file> are supported. (type: None, default: None)
   --calendar.verify-url {true,false}
                         Configure SSL verification of the URL (type: None, default: True)
   --calendar.user USER  Username for calendar URL HTTP authentication (basic authentication) (type: None, default: None)
