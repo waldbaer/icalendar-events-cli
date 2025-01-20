@@ -65,6 +65,47 @@ def localized_date_time(*args: any, **kwargs: any) -> DateTime:
     return local_timezone.localize(datetime(*args, **kwargs))
 
 
+def prepare_local_httpserver_mock(calendar_url: str, username: str, password: str, httpserver: HTTPServer) -> None:
+    """Prepare HTTP server mock.
+
+    Arguments:
+        calendar_url: ICS calendar URL,
+        username: Username for basicAuth
+        password: Password for basicAuth
+        httpserver: Mocked HTTP server
+    """
+    local_file_path = f"tests/ics_examples{calendar_url}"
+    local_file = open(local_file_path, encoding="UTF-8")
+    ics_file_content = local_file.read()
+    assert ics_file_content != ""
+    expected_headers = None
+    if username != "" and password != "":
+        expected_headers = {
+            "Authorization": (f"Basic {b64encode(bytes(f'{username}:{password}', encoding='ascii')).decode('ascii')}")
+        }
+
+    httpserver.expect_request(
+        calendar_url,
+        headers=expected_headers,
+    ).respond_with_data(ics_file_content)
+
+
+def build_basicauth_cli_arg(username: str, password: str) -> str:
+    """Build --basicAuth cli argument.
+
+    Arguments:
+        username: Username for basicAuth
+        password: Password for basicAuth
+
+    Returns:
+        cli argument for --basicAuth
+    """
+    basic_auth = ""
+    if username != "" and password != "":
+        basic_auth = f"--basicAuth '{username}:{password}' "
+    return basic_auth
+
+
 # ---- Testcases -------------------------------------------------------------------------------------------------------
 
 
@@ -326,27 +367,11 @@ def test_ct_valid_query_outputformat_json(
         httpserver: Mocked HTTP server
         capsys: System capture
     """
-    # Prepare HTTP server mock
-    local_file_path = f"tests/ics_examples{calendar_url}"
-    local_file = open(local_file_path, encoding="UTF-8")
-    ics_file_content = local_file.read()
-    assert ics_file_content != ""
-    expected_headers = None
-    if username != "" and password != "":
-        expected_headers = {
-            "Authorization": (f"Basic {b64encode(bytes(f'{username}:{password}', encoding='ascii')).decode('ascii')}")
-        }
-
-    httpserver.expect_request(
-        calendar_url,
-        headers=expected_headers,
-    ).respond_with_data(ics_file_content)
+    prepare_local_httpserver_mock(calendar_url, username, password, httpserver)
 
     # Run icalendar-events-cli
     calendar_url = httpserver.url_for(calendar_url)
-    basic_auth = ""
-    if username != "" and password != "":
-        basic_auth = f"--basicAuth '{username}:{password}' "
+    basic_auth = build_basicauth_cli_arg(username, password)
     args = (
         f"--url {calendar_url} {basic_auth}"
         + f"--startDate {start_date.isoformat()} --endDate {end_date.isoformat()}"
@@ -407,27 +432,11 @@ def test_ct_valid_query_outputformat_humanreadable(
         httpserver: Mocked HTTP server
         capsys: System capture
     """
-    # Prepare HTTP server mock
-    local_file_path = f"tests/ics_examples{calendar_url}"
-    local_file = open(local_file_path, encoding="UTF-8")
-    ics_file_content = local_file.read()
-    assert ics_file_content != ""
-    expected_headers = None
-    if username != "" and password != "":
-        expected_headers = {
-            "Authorization": (f"Basic {b64encode(bytes(f'{username}:{password}', encoding='ascii')).decode('ascii')}")
-        }
-
-    httpserver.expect_request(
-        calendar_url,
-        headers=expected_headers,
-    ).respond_with_data(ics_file_content)
+    prepare_local_httpserver_mock(calendar_url, username, password, httpserver)
 
     # Run icalendar-events-cli
     calendar_url = httpserver.url_for(calendar_url)
-    basic_auth = ""
-    if username != "" and password != "":
-        basic_auth = f"--basicAuth '{username}:{password}' "
+    basic_auth = build_basicauth_cli_arg(username, password)
     args = (
         f"--url {calendar_url} {basic_auth}"
         + f" --startDate {start_date.isoformat()} --endDate {end_date.isoformat()}"
