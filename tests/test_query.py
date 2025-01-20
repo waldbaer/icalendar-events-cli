@@ -112,6 +112,7 @@ def build_basicauth_cli_arg(username: str, password: str) -> str:
 # ---- Happy Path Tests ---------------------------------------------------------------------------
 
 test_queries = [
+    # ---- Public calendars ---------------------------------------------------
     # Thunderbird Holiday Calender 2024 / 2025 - Multimatch with RegEx
     # https://www.thunderbird.net/media/caldata/autogen/GermanHolidays.ics
     (
@@ -173,6 +174,7 @@ test_queries = [
         "",
         "",
     ),
+    # ---- Synthetic calendards with recurring events -------------------------
     # Recurring daily with until date
     (
         "/recurring_events.ics",
@@ -330,6 +332,26 @@ test_queries = [
                 location=None,  # no location expected,
                 start_date=localized_date_time(year=2026, month=5, day=1, hour=0, minute=0, second=0),
                 end_date=localized_date_time(year=2026, month=5, day=1, hour=23, minute=59, second=59),
+            ),
+        ],
+        # no basicAuth
+        "",
+        "",
+    ),
+    # ---- Other known issues ----
+    # github issue #6
+    (
+        "/other_examples.ics",
+        localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
+        localized_date_time(year=2025, month=12, day=31, hour=23, minute=59, second=59),
+        "github_issue_#6",
+        [
+            ExpectedEvent(
+                summary="github_issue_#6",
+                description="https://github.com/waldbaer/icalendar-events-cli/issues/6",
+                location=None,
+                start_date=localized_date_time(year=2025, month=1, day=23, hour=18, minute=15, second=0),
+                end_date=localized_date_time(year=2025, month=1, day=23, hour=19, minute=25, second=0),
             ),
         ],
         # no basicAuth
