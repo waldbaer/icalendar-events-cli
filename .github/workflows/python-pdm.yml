@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env:
+  TZ: Europe/Berlin
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -18,14 +21,6 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
 
     steps:
-      # https://github.com/szenius/set-timezone
-      - name: set timezone
-        uses: szenius/set-timezone@v2.0
-        with:
-          timezoneLinux: "Europe/Berlin"
-          timezoneMacos: "Europe/Berlin"
-          timezoneWindows: "Europe/Berlin"
-
       - uses: actions/checkout@v4
 
       - name: Setup Python PDM
