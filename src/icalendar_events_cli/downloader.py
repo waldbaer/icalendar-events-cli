@@ -1,7 +1,6 @@
 """ICS calender file downloader."""
 
 # ---- Imports ---------------------------------------------------------------------------------------------------------
-import logging
 import sys
 
 import requests
@@ -24,11 +23,9 @@ def download_ics(args: dict) -> str:
         session.auth = (user_password[0], user_password[1])
     response = session.get(url=args.url)
     if response.status_code != 200:
-        logging.error(
-            "Failed to download ical contents from URL '%s'. Response status: %s (status %s)",
-            response.url,
-            response.reason,
-            response.status_code,
+        print(
+            f"ERROR: Failed to download ical contents from URL '{response.url}'. "
+            + f"Response status: {response.reason} (status {response.status_code})",
         )
         sys.exit(1)
     return response.text

@@ -2,9 +2,8 @@
 
 import json
 import shlex
-from ast import Dict
 from dataclasses import dataclass
-from typing import Optional
+from typing import Dict, List, Optional
 
 import pytest
 
@@ -19,18 +18,23 @@ class CliResult:
 
     exit_code: int
     stdout: str
+    stdout_lines: List[str]
     stdout_as_json: Optional[dict]
 
-    def __init__(self, exit_code: int, stdout: str, stdout_as_json: Optional[dict] = None) -> None:
+    def __init__(
+        self, exit_code: int, stdout: str, stdout_lines: List[str], stdout_as_json: Optional[dict] = None
+    ) -> None:
         """Construct.
 
         Arguments:
             exit_code: Numeric process exit code
             stdout: Captured stdout
+            stdout_lines: Captured stdout splitted into individual lines
             stdout_as_json: Optional stdout parsed as JSON
         """
         self.exit_code = exit_code
         self.stdout = stdout
+        self.stdout_lines = stdout_lines
         self.stdout_as_json = stdout_as_json
 
 
@@ -47,7 +51,8 @@ def run_cli(cli_args: str, capsys: pytest.CaptureFixture) -> CliResult:
     exit_code = cli(shlex.split(cli_args))
     capture_result = capsys.readouterr()
     stdout = capture_result.out.rstrip()
-    return CliResult(exit_code, stdout)
+    stdout_lines = stdout.splitlines()
+    return CliResult(exit_code, stdout, stdout_lines)
 
 
 def run_cli_stdout_json(cli_args: str, capsys: pytest.CaptureFixture) -> Dict:
