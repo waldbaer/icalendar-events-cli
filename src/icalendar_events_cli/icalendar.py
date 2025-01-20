@@ -1,9 +1,8 @@
 """Access to icalendar objects and hierarchies."""
 
 # ---- Imports ---------------------------------------------------------------------------------------------------------
-import datetime
-import logging
 import re
+from datetime import date, datetime, timedelta
 
 import icalendar
 import pytz
@@ -32,11 +31,6 @@ def parse_calendar(args: dict, calendar_ics: str) -> CalendarQuery:
         CalendarQuery: Parsed CalendarQuery.
     """
     calendar = icalendar.Calendar.from_ical(calendar_ics)
-    logging.debug(
-        "Get calendar events between %s and %s...",
-        args.startDate.strftime("%Y-%m-%d %H:%M:%S"),
-        args.endDate.strftime("%Y-%m-%d %H:%M:%S"),
-    )
     calendar_components = ["VEVENT"]  # Only events
     return recurring_ical_events.of(calendar, components=calendar_components).between(args.startDate, args.endDate)
 
@@ -114,7 +108,7 @@ def get_event_location(args: dict, event: Event) -> str:
     return get_event_string_attribute(args, event, "LOCATION")
 
 
-def get_event_dtstart(event: Event) -> datetime.date:
+def get_event_dtstart(event: Event) -> date:
     """Get 'DTSTART' start-date of calendar event.
 
     Arguments:
@@ -124,14 +118,14 @@ def get_event_dtstart(event: Event) -> datetime.date:
         Start Date.
     """
     start = event.decoded("DTSTART")
-    if isinstance(start, datetime.date):
+    if isinstance(start, date) and not isinstance(start, datetime):
         # Convert full-day event to datetime
-        start = datetime.datetime.combine(start, datetime.datetime.min.time())
+        start = datetime.combine(start, datetime.min.time())
         start = __local_timezone.localize(start)
     return start
 
 
-def get_event_dtend(event: Event) -> datetime.date:
+def get_event_dtend(event: Event) -> date:
     """Get 'DTEND' end-date of calendar event.
 
     Arguments:
@@ -141,8 +135,10 @@ def get_event_dtend(event: Event) -> datetime.date:
         End Date.
     """
     end = event.decoded("DTEND")
-    if isinstance(end, datetime.date):
-        # Convert full-day event to datetime
-        end = datetime.datetime.combine(end, datetime.datetime.max.time()).replace(microsecond=0)
+    if end.resolution == timedelta(days=1):
+        # For full-day events the DTEND is always one day after DTSTART.
+        # Therefore subtract 1 day and then set time to end of day
+        end -= timedelta(days=1)
+        end = datetime.combine(end, datetime.max.time()).replace(microsecond=0)
         end = __local_timezone.localize(end)
     return end

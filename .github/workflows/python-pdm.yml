@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env:
+  TZ: Europe/Berlin
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -19,6 +22,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup Python PDM
         uses: pdm-project/setup-pdm@v4
         with:

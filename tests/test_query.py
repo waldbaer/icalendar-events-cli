@@ -1,6 +1,5 @@
 """Test of general commands."""
 
-import logging
 import os
 import re
 from base64 import b64encode
@@ -9,7 +8,10 @@ from datetime import datetime
 from typing import Optional
 
 import pytest
+import pytz
+from click import DateTime
 from pytest_httpserver import HTTPServer
+from tzlocal import get_localzone
 
 from tests.util_runner import run_cli, run_cli_stdout_json
 
@@ -22,191 +24,56 @@ class ExpectedEvent:
     summary: str
     description: Optional[str]
     location: Optional[str]
+    start_date: Optional[datetime]
+    end_date: Optional[datetime]
 
-    def __init__(self, summary: str, description: Optional[str] = None, location: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        summary: str,
+        description: Optional[str] = None,
+        location: Optional[str] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+    ) -> None:
         """Construct.
 
         Arguments:
             summary: Event summary
             description: Event description
             location: Event location
+            start_date: Start date
+            end_date: End date
         """
         self.summary = summary
         self.description = description
         self.location = location
+        self.start_date = start_date
+        self.end_date = end_date
 
 
-# ---- Testcases -------------------------------------------------------------------------------------------------------
+def localized_date_time(*args: any, **kwargs: any) -> DateTime:
+    """Build a localized datetime instance.
+
+    Arguments:
+        args: Generic arguments list forwarded to datetime constructor.
+        kwargs: Generic keyword arguments forwarded to datetime constructor.
+
+    Returns:
+        Localized datetime instance.
+    """
+    local_timezone = pytz.timezone(get_localzone().key)
+    return local_timezone.localize(datetime(*args, **kwargs))
 
 
-# ---- Happy Path Tests ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "calendar_url,start_date,end_date,summary_filter,expected_events,username,password",
-    [
-        # Thunderbird Holiday Calender 2024 / 2025 - Multimatch with RegEx
-        # https://www.thunderbird.net/media/caldata/autogen/GermanHolidays.ics
-        (
-            "/GermanHolidays.ics",
-            datetime(year=datetime.today().year, month=1, day=1, hour=0, minute=0, second=0),
-            datetime(year=datetime.today().year, month=12, day=31, hour=23, minute=59, second=59),
-            ".*Oster.*",
-            [
-                ExpectedEvent("Ostersonntag.*", ".*Common local holiday*"),
-                ExpectedEvent("Ostermontag.*", ".*Tag nach dem Ostersonntag*"),
-            ],
-            # no basicAuth
-            "",
-            "",
-        ),
-        # Thunderbird Holiday Calender 2024 / 2025 - SingleMatch with RegEx
-        # https://www.thunderbird.net/media/caldata/autogen/GermanHolidays.ics
-        (
-            "/GermanHolidays.ics",
-            datetime(year=datetime.today().year, month=10, day=3, hour=0, minute=0, second=0),
-            datetime(year=datetime.today().year, month=10, day=4, hour=23, minute=59, second=59),
-            ".*Einheit.*",
-            [ExpectedEvent("Tag der Deutschen Einheit", ".*Wiedervereinigung Deutschlands.*")],
-            # no basicAuth
-            "",
-            "",
-        ),
-        # Recurring daily with until date: 10 total events expected
-        (
-            "/recurring_events.ics",
-            datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0),
-            datetime(year=2025, month=2, day=28, hour=23, minute=59, second=59),
-            "recurring_event_daily_until_10days",
-            [
-                ExpectedEvent(
-                    "recurring_event_daily_until_10days",
-                    "description_recurring_event_daily_until_10days",
-                    "location_recurring_event_daily_until_10days",
-                )
-            ]
-            * 10,
-            # with dummy basicAuth
-            "dummy_user",
-            "test_password",
-        ),
-        # Recurring every second day. 20 total events expected.
-        (
-            "/recurring_events.ics",
-            datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0),
-            datetime(year=2025, month=2, day=28, hour=23, minute=59, second=59),
-            "recurring_event_every_second_day_count20",
-            [
-                ExpectedEvent(
-                    "recurring_event_every_second_day_count20",
-                    "description_recurring_event_every_second_day_count20",
-                    "location_recurring_event_every_second_day_count20",
-                )
-            ]
-            * 20,
-            # no basicAuth
-            "",
-            "",
-        ),
-        # Recurring weekly. 20 total events expected.
-        (
-            "/recurring_events.ics",
-            datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0),
-            datetime(year=2025, month=2, day=28, hour=23, minute=59, second=59),
-            "recurring_event_weekly_2months",
-            [
-                ExpectedEvent(
-                    "recurring_event_weekly_2months",
-                    "description_recurring_event_weekly_2months",
-                    None,  # no location expected
-                )
-            ]
-            * 8,
-            # no basicAuth
-            "",
-            "",
-        ),
-        # Recurring weekly. Query only first of the two months. 10 total events expected.
-        (
-            "/recurring_events.ics",
-            datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0),
-            datetime(year=2025, month=1, day=31, hour=23, minute=59, second=59),
-            "recurring_event_weekly_2months",
-            [
-                ExpectedEvent(
-                    "recurring_event_weekly_2months",
-                    "description_recurring_event_weekly_2months",
-                    None,  # no location expected
-                )
-            ]
-            * 5,  # 5 weeks starting from 01.01 in 31 days january
-            # no basicAuth
-            "",
-            "",
-        ),
-        # Recurring monthly. Second half year expected.
-        (
-            "/recurring_events.ics",
-            datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0),
-            datetime(year=2025, month=12, day=31, hour=23, minute=59, second=59),
-            "recurring_event_monthly_6months",
-            [
-                ExpectedEvent(
-                    "recurring_event_monthly_6months",
-                    None,  # no description expected
-                    "location_recurring_event_monthly_6months",
-                )
-            ]
-            * 6,
-            # no basicAuth
-            "",
-            "",
-        ),
-        # Recurring yearly. 10 years expected.
-        (
-            "/recurring_events.ics",
-            datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0),
-            datetime(year=2035, month=12, day=31, hour=23, minute=59, second=59),
-            "recurring_event_yearly_10years",
-            [
-                ExpectedEvent(
-                    "recurring_event_yearly_10years",
-                    None,  # no description expected
-                    None,  # no location expected
-                )
-            ]
-            * 10,
-            # no basicAuth
-            "",
-            "",
-        ),
-    ],
-)
-def test_ct_valid_query(
-    calendar_url: str,
-    start_date: datetime,
-    end_date: datetime,
-    summary_filter: str,
-    expected_events: list[ExpectedEvent],
-    username: str,
-    password: str,
-    httpserver: HTTPServer,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """Test a calendar query.
+def prepare_local_httpserver_mock(calendar_url: str, username: str, password: str, httpserver: HTTPServer) -> None:
+    """Prepare HTTP server mock.
 
     Arguments:
         calendar_url: ICS calendar URL,
-        start_date: Start Date
-        end_date: End Date,
-        summary_filter: Summary Filter
-        expected_events: List of expected events
         username: Username for basicAuth
         password: Password for basicAuth
         httpserver: Mocked HTTP server
-        capsys: System capture
     """
-    # Prepare HTTP server mock
     local_file_path = f"tests/ics_examples{calendar_url}"
     local_file = open(local_file_path, encoding="UTF-8")
     ics_file_content = local_file.read()
@@ -222,15 +89,315 @@ def test_ct_valid_query(
         headers=expected_headers,
     ).respond_with_data(ics_file_content)
 
-    # Run icalendar-events-cli
-    calendar_url = httpserver.url_for(calendar_url)
+
+def build_basicauth_cli_arg(username: str, password: str) -> str:
+    """Build --basicAuth cli argument.
+
+    Arguments:
+        username: Username for basicAuth
+        password: Password for basicAuth
+
+    Returns:
+        cli argument for --basicAuth
+    """
     basic_auth = ""
     if username != "" and password != "":
         basic_auth = f"--basicAuth '{username}:{password}' "
+    return basic_auth
+
+
+# ---- Testcases -------------------------------------------------------------------------------------------------------
+
+
+# ---- Happy Path Tests ---------------------------------------------------------------------------
+
+test_queries = [
+    # ---- Public calendars ---------------------------------------------------
+    # Thunderbird Holiday Calender 2024 / 2025 - Multimatch with RegEx
+    # https://www.thunderbird.net/media/caldata/autogen/GermanHolidays.ics
+    (
+        "/GermanHolidays.ics",
+        localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
+        localized_date_time(year=2026, month=12, day=31, hour=23, minute=59, second=59),
+        ".*Oster(sonntag|montag).*",
+        [
+            ExpectedEvent(
+                summary="Ostersonntag.*",
+                description=".*Common local holiday*",
+                location=None,
+                start_date=localized_date_time(year=2025, month=4, day=20, hour=0, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=4, day=20, hour=23, minute=59, second=59),
+            ),
+            ExpectedEvent(
+                summary="Ostermontag.*",
+                description=".*Tag nach dem Ostersonntag*",
+                location=None,
+                start_date=localized_date_time(year=2025, month=4, day=21, hour=0, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=4, day=21, hour=23, minute=59, second=59),
+            ),
+            ExpectedEvent(
+                summary="Ostersonntag.*",
+                description=".*Common local holiday*",
+                location=None,
+                start_date=localized_date_time(year=2026, month=4, day=5, hour=0, minute=0, second=0),
+                end_date=localized_date_time(year=2026, month=4, day=5, hour=23, minute=59, second=59),
+            ),
+            ExpectedEvent(
+                summary="Ostermontag.*",
+                description=".*Tag nach dem Ostersonntag*",
+                location=None,
+                start_date=localized_date_time(year=2026, month=4, day=6, hour=0, minute=0, second=0),
+                end_date=localized_date_time(year=2026, month=4, day=6, hour=23, minute=59, second=59),
+            ),
+        ],
+        # no basicAuth
+        "",
+        "",
+    ),
+    # Thunderbird Holiday Calender 2024 / 2025 - SingleMatch with RegEx
+    # https://www.thunderbird.net/media/caldata/autogen/GermanHolidays.ics
+    (
+        "/GermanHolidays.ics",
+        localized_date_time(year=2025, month=10, day=3, hour=0, minute=0, second=0),
+        localized_date_time(year=2025, month=10, day=4, hour=23, minute=59, second=59),
+        ".*Einheit.*",
+        [
+            ExpectedEvent(
+                summary="Tag der Deutschen Einheit",
+                description=".*Wiedervereinigung Deutschlands.*",
+                location=None,
+                start_date=localized_date_time(year=2025, month=10, day=3, hour=0, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=10, day=3, hour=23, minute=59, second=59),
+            )
+        ],
+        # no basicAuth
+        "",
+        "",
+    ),
+    # ---- Synthetic calendards with recurring events -------------------------
+    # Recurring daily with until date
+    (
+        "/recurring_events.ics",
+        localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
+        localized_date_time(year=2025, month=2, day=28, hour=23, minute=59, second=59),
+        "recurring_event_daily_until_3days",
+        [
+            ExpectedEvent(
+                summary="recurring_event_daily_until_3days",
+                description="description_recurring_event_daily_until_3days",
+                location="location_recurring_event_daily_until_3days",
+                start_date=localized_date_time(year=2025, month=1, day=1, hour=19, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=1, day=1, hour=20, minute=0, second=0),
+            ),
+            ExpectedEvent(
+                summary="recurring_event_daily_until_3days",
+                description="description_recurring_event_daily_until_3days",
+                location="location_recurring_event_daily_until_3days",
+                start_date=localized_date_time(year=2025, month=1, day=2, hour=19, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=1, day=2, hour=20, minute=0, second=0),
+            ),
+            ExpectedEvent(
+                summary="recurring_event_daily_until_3days",
+                description="description_recurring_event_daily_until_3days",
+                location="location_recurring_event_daily_until_3days",
+                start_date=localized_date_time(year=2025, month=1, day=3, hour=19, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=1, day=3, hour=20, minute=0, second=0),
+            ),
+        ],
+        # with dummy basicAuth
+        "dummy_user",
+        "test_password",
+    ),
+    # Recurring every second day.
+    (
+        "/recurring_events.ics",
+        localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
+        localized_date_time(year=2025, month=2, day=28, hour=23, minute=59, second=59),
+        "recurring_event_every_second_day_count2",
+        [
+            ExpectedEvent(
+                summary="recurring_event_every_second_day_count2",
+                description="description_recurring_event_every_second_day_count2",
+                location="location_recurring_event_every_second_day_count2",
+                start_date=localized_date_time(year=2025, month=1, day=1, hour=11, minute=12, second=13),
+                end_date=localized_date_time(year=2025, month=1, day=1, hour=14, minute=15, second=16),
+            ),
+            ExpectedEvent(
+                summary="recurring_event_every_second_day_count2",
+                description="description_recurring_event_every_second_day_count2",
+                location="location_recurring_event_every_second_day_count2",
+                start_date=localized_date_time(year=2025, month=1, day=3, hour=11, minute=12, second=13),
+                end_date=localized_date_time(year=2025, month=1, day=3, hour=14, minute=15, second=16),
+            ),
+        ],
+        # no basicAuth
+        "",
+        "",
+    ),
+    # Recurring weekly.
+    (
+        "/recurring_events.ics",
+        localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
+        localized_date_time(year=2025, month=2, day=28, hour=23, minute=59, second=59),
+        "recurring_event_weekly_2weeks",
+        [
+            ExpectedEvent(
+                summary="recurring_event_weekly_2weeks",
+                description="description_recurring_event_weekly_2weeks",
+                location=None,  # no location expected
+                start_date=localized_date_time(year=2025, month=1, day=1, hour=9, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=1, day=1, hour=17, minute=0, second=0),
+            ),
+            ExpectedEvent(
+                summary="recurring_event_weekly_2weeks",
+                description="description_recurring_event_weekly_2weeks",
+                location=None,  # no location expected
+                start_date=localized_date_time(year=2025, month=1, day=8, hour=9, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=1, day=8, hour=17, minute=0, second=0),
+            ),
+        ],
+        # no basicAuth
+        "",
+        "",
+    ),
+    # Recurring weekly. Query only first week.
+    (
+        "/recurring_events.ics",
+        localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
+        localized_date_time(year=2025, month=1, day=7, hour=23, minute=59, second=59),
+        "recurring_event_weekly_2weeks",
+        [
+            ExpectedEvent(
+                summary="recurring_event_weekly_2weeks",
+                description="description_recurring_event_weekly_2weeks",
+                location=None,  # no location expected
+                start_date=localized_date_time(year=2025, month=1, day=1, hour=9, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=1, day=1, hour=17, minute=0, second=0),
+            )
+        ],
+        # no basicAuth
+        "",
+        "",
+    ),
+    # Recurring monthly.
+    (
+        "/recurring_events.ics",
+        localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
+        localized_date_time(year=2025, month=12, day=31, hour=23, minute=59, second=59),
+        "recurring_event_monthly_3months",
+        [
+            ExpectedEvent(
+                summary="recurring_event_monthly_3months",
+                description=None,  # no description expected
+                location="location_recurring_event_monthly_3months",
+                start_date=localized_date_time(year=2025, month=7, day=1, hour=0, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=7, day=3, hour=23, minute=59, second=59),
+            ),
+            ExpectedEvent(
+                summary="recurring_event_monthly_3months",
+                description=None,  # no description expected
+                location="location_recurring_event_monthly_3months",
+                start_date=localized_date_time(year=2025, month=8, day=1, hour=0, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=8, day=3, hour=23, minute=59, second=59),
+            ),
+            ExpectedEvent(
+                summary="recurring_event_monthly_3months",
+                description=None,  # no description expected
+                location="location_recurring_event_monthly_3months",
+                start_date=localized_date_time(year=2025, month=9, day=1, hour=0, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=9, day=3, hour=23, minute=59, second=59),
+            ),
+        ],
+        # no basicAuth
+        "",
+        "",
+    ),
+    # Recurring yearly.
+    (
+        "/recurring_events.ics",
+        localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
+        localized_date_time(year=2035, month=12, day=31, hour=23, minute=59, second=59),
+        "recurring_event_yearly_2years_with_fullday_event",
+        [
+            ExpectedEvent(
+                summary="recurring_event_yearly_2years_with_fullday_event",
+                description=None,  # no description expected
+                location=None,  # no location expected,
+                start_date=localized_date_time(year=2025, month=5, day=1, hour=0, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=5, day=1, hour=23, minute=59, second=59),
+            ),
+            ExpectedEvent(
+                summary="recurring_event_yearly_2years_with_fullday_event",
+                description=None,  # no description expected
+                location=None,  # no location expected,
+                start_date=localized_date_time(year=2026, month=5, day=1, hour=0, minute=0, second=0),
+                end_date=localized_date_time(year=2026, month=5, day=1, hour=23, minute=59, second=59),
+            ),
+        ],
+        # no basicAuth
+        "",
+        "",
+    ),
+    # ---- Other known issues ----
+    # github issue #6
+    (
+        "/other_examples.ics",
+        localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
+        localized_date_time(year=2025, month=12, day=31, hour=23, minute=59, second=59),
+        "github_issue_#6",
+        [
+            ExpectedEvent(
+                summary="github_issue_#6",
+                description="https://github.com/waldbaer/icalendar-events-cli/issues/6",
+                location=None,
+                start_date=localized_date_time(year=2025, month=1, day=23, hour=18, minute=15, second=0),
+                end_date=localized_date_time(year=2025, month=1, day=23, hour=19, minute=25, second=0),
+            ),
+        ],
+        # no basicAuth
+        "",
+        "",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "calendar_url,start_date,end_date,summary_filter,expected_events,username,password",
+    test_queries,
+)
+def test_ct_valid_query_outputformat_json(
+    calendar_url: str,
+    start_date: datetime,
+    end_date: datetime,
+    summary_filter: str,
+    expected_events: list[ExpectedEvent],
+    username: str,
+    password: str,
+    httpserver: HTTPServer,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test calendar queries with output format 'JSON'.
+
+    Arguments:
+        calendar_url: ICS calendar URL,
+        start_date: Start Date
+        end_date: End Date,
+        summary_filter: Summary Filter
+        expected_events: List of expected events
+        username: Username for basicAuth
+        password: Password for basicAuth
+        httpserver: Mocked HTTP server
+        capsys: System capture
+    """
+    prepare_local_httpserver_mock(calendar_url, username, password, httpserver)
+
+    # Run icalendar-events-cli
+    calendar_url = httpserver.url_for(calendar_url)
+    basic_auth = build_basicauth_cli_arg(username, password)
     args = (
         f"--url {calendar_url} {basic_auth}"
         + f"--startDate {start_date.isoformat()} --endDate {end_date.isoformat()}"
-        + f" -f {summary_filter} --outputFormat json"
+        + f" --summaryFilter {summary_filter} --outputFormat json"
     )
 
     cli_result = run_cli_stdout_json(args, capsys)
@@ -246,57 +413,35 @@ def test_ct_valid_query(
 
     for events_index, expected_event in enumerate(expected_events):
         assert re.match(expected_event.summary, events[events_index]["summary"])
+        assert expected_event.start_date.isoformat() == events[events_index]["startDate"]
+        assert expected_event.end_date.isoformat() == events[events_index]["endDate"]
+
         if expected_event.description is not None:
             assert re.match(expected_event.description, events[events_index]["description"])
+        else:
+            assert "description" not in events[events_index]
+
         if expected_event.location is not None:
             assert re.match(expected_event.location, events[events_index]["location"])
+        else:
+            assert "location" not in events[events_index]
 
 
 @pytest.mark.parametrize(
-    "calendar_url,start_date,end_date,summary_filter,expected_events",
-    [
-        (
-            "/recurring_events.ics",
-            datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0),
-            datetime(year=2025, month=2, day=28, hour=23, minute=59, second=59),
-            "recurring_event_daily_until_10days",
-            [
-                ExpectedEvent(
-                    "recurring_event_daily_until_10days",
-                    "description_recurring_event_daily_until_10days",
-                    "location_recurring_event_daily_until_10days",
-                )
-            ]
-            * 10,
-        ),
-        # Without description and location
-        (
-            "/recurring_events.ics",
-            datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0),
-            datetime(year=2035, month=12, day=31, hour=23, minute=59, second=59),
-            "recurring_event_yearly_10years",
-            [
-                ExpectedEvent(
-                    "recurring_event_yearly_10years",
-                    None,  # no description expected
-                    None,  # no location expected
-                )
-            ]
-            * 10,
-        ),
-    ],
+    "calendar_url,start_date,end_date,summary_filter,expected_events,username,password", test_queries
 )
-def test_ct_valid_query_output_humanreadable(
+def test_ct_valid_query_outputformat_humanreadable(
     calendar_url: str,
     start_date: datetime,
     end_date: datetime,
     summary_filter: str,
     expected_events: list[ExpectedEvent],
+    username: str,
+    password: str,
     httpserver: HTTPServer,
-    caplog: pytest.LogCaptureFixture,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Test a calendar query.
+    """Test calendar queries with output format 'human readable'.
 
     Arguments:
         calendar_url: ICS calendar URL,
@@ -304,78 +449,84 @@ def test_ct_valid_query_output_humanreadable(
         end_date: End Date,
         summary_filter: Summary Filter
         expected_events: List of expected events
+        username: Username for basicAuth
+        password: Password for basicAuth
         httpserver: Mocked HTTP server
-        caplog: Log capture
         capsys: System capture
     """
-    # Prepare HTTP server mock
-    local_file_path = f"tests/ics_examples{calendar_url}"
-    local_file = open(local_file_path, encoding="UTF-8")
-    ics_file_content = local_file.read()
-    assert ics_file_content != ""
-    httpserver.expect_request(calendar_url).respond_with_data(ics_file_content)
+    prepare_local_httpserver_mock(calendar_url, username, password, httpserver)
 
     # Run icalendar-events-cli
     calendar_url = httpserver.url_for(calendar_url)
+    basic_auth = build_basicauth_cli_arg(username, password)
     args = (
-        f"--url {calendar_url} --startDate {start_date.isoformat()} --endDate {end_date.isoformat()}"
+        f"--url {calendar_url} {basic_auth}"
+        + f" --startDate {start_date.isoformat()} --endDate {end_date.isoformat()}"
         + f" --summaryFilter {summary_filter} --outputFormat logger --verbose"
     )
 
-    with caplog.at_level(logging.INFO):
-        cli_result = run_cli(args, capsys)
-        assert cli_result.exit_code == os.EX_OK
+    cli_result = run_cli(args, capsys)
+    assert cli_result.exit_code == os.EX_OK
 
-    assert f"Start Date:       {start_date.strftime('%Y-%m-%d')}" in caplog.text
-    assert f"End Date:         {end_date.strftime('%Y-%m-%d')}" in caplog.text
-    assert f"Summary Filter:   {summary_filter}" in caplog.text
-    assert f"Number of Events: {len(expected_events)}" in caplog.text
+    output_lines = cli_result.stdout_lines
+    header_lines = 4  # start / enddate, summary filter, number of events
+    assert len(output_lines) >= (header_lines + len(expected_events))
+
+    assert f"Start Date:       {start_date.strftime('%Y-%m-%d')}" in output_lines[0]
+    assert f"End Date:         {end_date.strftime('%Y-%m-%d')}" in output_lines[1]
+    assert f"Summary Filter:   {summary_filter}" in output_lines[2]
+    assert f"Number of Events: {len(expected_events)}" in output_lines[3]
+
+    events_output_lines = output_lines[header_lines:]
+
+    for events_index, expected_event in enumerate(expected_events):
+        expected_start_end = f"{expected_event.start_date.isoformat()} -> {expected_event.end_date.isoformat()}"
+        assert events_output_lines[events_index].startswith(expected_start_end)
+
+        assert re.match(f".*| {expected_event.summary} |.*", events_output_lines[events_index])
+        if expected_event.description is not None:
+            assert re.match(f".*| {expected_event.description} |.*", events_output_lines[events_index])
+        if expected_event.location is not None:
+            assert re.match(f".*| {expected_event.location} |.*", events_output_lines[events_index])
 
 
 # ---- Negative Tests -----------------------------------------------------------------------------
 
 
 def test_ct_invalid_url(
-    caplog: pytest.LogCaptureFixture,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Test a calendar query with an invalid (not existing) URL.
 
     Arguments:
-        caplog: Log capture
         capsys: System capture
     """
     invalid_url = "https://www.INVALID_URL.123/INVALID_ICS_FILE.icsx"
     args = f"--url {invalid_url} --startDate 2025-01-01 --endDate 2025-01-17 -f xxx --outputFormat json"
 
-    with caplog.at_level(logging.INFO):
-        cli_result = run_cli(args, capsys)
+    cli_result = run_cli(args, capsys)
 
     assert cli_result.exit_code != 0
-    assert "Failed to resolve" in caplog.text
-    assert "Name or service not known" in caplog.text
+    assert "Failed to resolve" in cli_result.stdout
+    assert "Name or service not known" in cli_result.stdout
 
 
-def test_ct_failing_server_response(
-    httpserver: HTTPServer, capsys: pytest.CaptureFixture[str], caplog: pytest.LogCaptureFixture
-) -> None:
+def test_ct_failing_server_response(httpserver: HTTPServer, capsys: pytest.CaptureFixture[str]) -> None:
     """Test that ICS file download fails with HTTP error.
 
     Arguments:
         httpserver: Mocked HTTP server
         capsys: System capture
-        caplog: Logging capture fixture
     """
     calendar_url = "calendar.ics"
     httpserver.expect_request(calendar_url).respond_with_data("not found", status=404)
     calendar_url = httpserver.url_for(calendar_url)
 
-    start_date = datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0).isoformat()
-    end_date = datetime(year=2025, month=2, day=1, hour=0, minute=0, second=0).isoformat()
+    start_date = localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0).isoformat()
+    end_date = localized_date_time(year=2025, month=2, day=1, hour=0, minute=0, second=0).isoformat()
     args = f"--url {calendar_url} --startDate {start_date} --endDate {end_date} -f invalid --outputFormat json"
 
-    with caplog.at_level(logging.WARNING):
-        cli_result = run_cli(args, capsys)
-        assert cli_result.exit_code != os.EX_OK
+    cli_result = run_cli(args, capsys)
+    assert cli_result.exit_code != os.EX_OK
 
-    assert "Failed to download ical contents from URL" in caplog.text
+    assert "Failed to download ical contents from URL" in cli_result.stdout

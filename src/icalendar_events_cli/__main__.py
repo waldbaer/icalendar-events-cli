@@ -8,7 +8,7 @@ from typing import Optional
 from .argparse import parse_config
 from .downloader import download_ics
 from .icalendar import filter_events, parse_calendar
-from .output import configure_logging, logging, output_events
+from .output import output_events
 
 # ---- Module Meta-Data ------------------------------------------------------------------------------------------------
 __prog__ = "icalendar-events-cli"
@@ -43,16 +43,14 @@ def cli(arg_list: Optional[list[str]] = None) -> int:
         return e.code
 
     except BaseException as e:  # pylint: disable=broad-exception-caught;reason=Explicitely capture all exceptions thrown during execution.
-        logging.error(
-            f"Any error has occured!{os.linesep}{os.linesep}Exception: {str(e)}"
+        print(
+            f"ERROR: Any error has occured!{os.linesep}{os.linesep}Exception: {str(e)}"
             # f"Detailed Traceback: {traceback.format_exc()}"
         )
         return 1
 
 
 def _main_logic(args: dict) -> int:
-    configure_logging(args)
-
     calendar_ics = download_ics(args)
     events = parse_calendar(args, calendar_ics)
     if args.summaryFilter is not None:
