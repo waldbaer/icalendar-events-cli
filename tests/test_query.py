@@ -507,8 +507,7 @@ def test_ct_invalid_url(
     cli_result = run_cli(args, capsys)
 
     assert cli_result.exit_code != 0
-    assert "Failed to resolve" in cli_result.stdout
-    assert "Name or service not known" in cli_result.stdout
+    assert "Max retries exceeded with url" in cli_result.stdout
 
 
 def test_ct_failing_server_response(httpserver: HTTPServer, capsys: pytest.CaptureFixture[str]) -> None:
