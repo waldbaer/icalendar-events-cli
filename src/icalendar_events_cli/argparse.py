@@ -1,6 +1,9 @@
 """Argument parsing."""
 
 # ---- Imports ----
+import re
+import sys
+from argparse import ArgumentTypeError
 from datetime import datetime
 from typing import Optional
 
@@ -11,6 +14,10 @@ from rich_argparse import RawTextRichHelpFormatter
 from tzlocal import get_localzone
 
 from .output import OutputFormat
+
+# ---- Globals ---------------------------------------------------------------------------------------------------------
+
+_local_timezone = pytz.timezone(get_localzone().key)
 
 
 # ---- CommandLine parser ----------------------------------------------------------------------------------------------
@@ -31,7 +38,7 @@ def parse_config(prog: str, version: str, copy_right: str, author: str, arg_list
     Returns:
         Dict: Parsed configuration options.
     """
-    argparser = ArgumentParser(
+    arg_parser = ArgumentParser(
         prog=prog,
         description="Command-line tool to read events from a iCalendar (ICS) files."
         + f" | Version {version} | {copy_right}",
@@ -43,66 +50,67 @@ def parse_config(prog: str, version: str, copy_right: str, author: str, arg_list
         formatter_class=E3DCCliHelpFormatter,
     )
 
-    argparser.add_argument("-c", "--config", action="config", help="""Path to JSON configuration file.""")
+    arg_parser.add_argument("-c", "--config", action="config", help="""Path to JSON configuration file.""")
 
     # ---- Calendar URL / access ----
-    argparser.add_argument(
+    arg_parser.add_argument(
         "--calendar.url",
         type=str,
+        required=True,
         help="""URL of the iCalendar (ICS).
 Also URLs to local files with schema file://<absolute path to local file> are supported.""",
     )
-    argparser.add_argument(
+    arg_parser.add_argument(
         "--calendar.verify-url",
         type=bool,
         default=True,
         help="Configure SSL verification of the URL",
     )
-    argparser.add_argument(
+    arg_parser.add_argument(
         "--calendar.user",
         type=SecretStr,
         help="Username for calendar URL HTTP authentication (basic authentication)",
     )
-    argparser.add_argument(
+    arg_parser.add_argument(
         "--calendar.password",
         type=SecretStr,
         help="Password for calendar URL HTTP authentication (basic authentication)",
     )
-    argparser.add_argument("--calendar.encoding", default="UTF-8", help="Encoding of the calendar")
+    arg_parser.add_argument("--calendar.encoding", default="UTF-8", help="Encoding of the calendar")
 
     # ---- Filtering ----
-    argparser.add_argument(
+    arg_parser.add_argument(
         "-f",
         "--filter.summary",
+        type=regex_type,
         default=".*",
         help="RegEx to filter calendar events based on summary field.",
     )
 
-    local_timezone = pytz.timezone(get_localzone().key)
-    argparser.add_argument(
+    arg_parser.add_argument(
         "-s",
         "--filter.start-date",
-        type=_datetime_fromisoformat,
-        default=local_timezone.localize(datetime.now().replace(microsecond=0)).replace(microsecond=0),
+        type=datetime_isoformat,
+        default=_local_timezone.localize(datetime.now().replace(microsecond=0)).replace(microsecond=0),
         help="Start date/time of event filter by time (ISO format). Default: now",
     )
-    argparser.add_argument(
+    arg_parser.add_argument(
         "-e",
         "--filter.end-date",
-        type=_datetime_fromisoformat,
-        default=local_timezone.localize(datetime.combine(datetime.now(), datetime.max.time())).replace(microsecond=0),
+        type=datetime_isoformat,
+        default=_local_timezone.localize(datetime.combine(datetime.now(), datetime.max.time())).replace(microsecond=0),
         help="End date/time of event filter by time (ISO format). Default: end of today",
     )
 
     # ---- Output ----
-    argparser.add_argument(
+    arg_parser.add_argument(
         "--output.format",
         default=OutputFormat.human_readable,
         type=OutputFormat,
         help="Output format.",
     )
 
-    argparser.add_argument(
+    arg_parser.add_argument(
         "-o",
         "--output.file",
         type=Optional[str],
@@ -110,18 +118,72 @@ Also URLs to local files with schema file://<absolute path to local file> are su
     )
 
     # ---- Finally parse the inputs  ----
-    args = argparser.parse_args(args=arg_list)
+    config = arg_parser.parse_args(args=arg_list)
 
-    return args
+    # ---- Post-parse validation ----
+    _validate_config(config)
+
+    return config
 
 
-def _datetime_fromisoformat(arg: str) -> datetime:
+def datetime_isoformat(arg: str) -> datetime:
     """Convert isoformat cli argument to datetime.
 
     Arguments:
         arg: cli argument in ISO format
 
+    Raises:
+        ArgumentTypeError: in case the parsing failed
+
     Returns:
         Parsed datetime instance.
     """
-    return datetime.fromisoformat(str(arg))
+    try:
+        dt = datetime.fromisoformat(str(arg))
+    except ValueError:
+        raise ArgumentTypeError(f"invalid datetime value (expected ISO 8601 format): '{arg}'") from None
+
+    if dt.tzinfo is None:
+        dt = _local_timezone.localize(dt)
+    return dt
+
+
+def regex_type(arg: str) -> str:
+    """Check if a string is a valid RegEx.
+
+    Arguments:
+        arg: cli argument to be checked
+
+    Raises:
+        ArgumentTypeError: in case the parsing failed
+
+    Returns:
+        unmodified string argument
+    """
+    try:
+        re.compile(arg)
+    except re.error as e:
+        raise ArgumentTypeError(f"invalid RegEx value '{arg}': {e}") from None
+    return arg
+
+
+def _validate_config(config: dict) -> None:
+    """Validate the configuration.
+
+    Arguments:
+        config: Parsed configuration hierarchy.
+    """
+    found_config_issues = []
+
+    if config.filter.start_date > config.filter.end_date:
+        found_config_issues.append(
+            "filter.end-date must be after filter.start-state"
+            + f" (configured: {config.filter.start_date} -> {config.filter.end_date})"
+        )
+
+    # Finally report all found issues
+    if found_config_issues:
+        print("ERROR: invalid configuration / parameters:", file=sys.stderr)
+        for found_config_issue in found_config_issues:
+            print(f"- {found_config_issue}", file=sys.stderr)
+        sys.exit(1)

@@ -152,21 +152,21 @@ icalendar-events-cli --config school-summer-vacation.json --filter.end-date $(($
 Details about all available options:
 
 ```
-Usage: icalendar-events-cli [-h] [--version] [-c CONFIG] [--calendar.url URL] [--calendar.verify-url {true,false}]
-                            [--calendar.user USER] [--calendar.password PASSWORD] [--calendar.encoding ENCODING] [-f SUMMARY]
-                            [-s START_DATE] [-e END_DATE] [--output.format {human_readable,json}] [-o FILE]
+Usage: icalendar-events-cli [-h] [--version] [-c CONFIG] --calendar.url URL [--calendar.verify-url {true,false}]
+                            [--calendar.user USER] [--calendar.password PASSWORD] [--calendar.encoding ENCODING]
+                            [-f SUMMARY] [-s START_DATE] [-e END_DATE] [--output.format {human_readable,json}] [-o FILE]
 
 Command-line tool to read events from a iCalendar (ICS) files. | Version 1.0.0 | Copyright 2023-2025
 
 Default Config File Locations:
-  ['./config.json'], Note: default values below are the ones overridden by the contents of: ./config.json
+  ['./config.json'], Note: no existing default config file found.
 
 Options:
   -h, --help            Show this help message and exit.
   --version             Print version and exit.
   -c, --config CONFIG   Path to JSON configuration file.
   --calendar.url URL    URL of the iCalendar (ICS).
-                        Also URLs to local files with schema file://<absolute path to local file> are supported. (type: None, default: None)
+                        Also URLs to local files with schema file://<absolute path to local file> are supported. (required, type: None)
   --calendar.verify-url {true,false}
                         Configure SSL verification of the URL (type: None, default: True)
   --calendar.user USER  Username for calendar URL HTTP authentication (basic authentication) (type: None, default: None)
@@ -175,16 +175,15 @@ Options:
   --calendar.encoding ENCODING
                         Encoding of the calendar (default: UTF-8)
   -f, --filter.summary SUMMARY
-                        RegEx to filter calendar events based on summary field. (default: .*)
+                        RegEx to filter calendar events based on summary field. (type: regex_type, default: .*)
   -s, --filter.start-date START_DATE
-                        Start date/time of event filter by time (ISO format). Default: now (type: _datetime_fromisoformat, default: 2025-01-21 21:29:13+01:00)
+                        Start date/time of event filter by time (ISO format). Default: now (type: datetime_isoformat)
   -e, --filter.end-date END_DATE
-                        End date/time of event filter by time (ISO format). Default: end of today (type: _datetime_fromisoformat, default: 2025-01-21 23:59:59+01:00)
+                        End date/time of event filter by time (ISO format). Default: end of today (type: datetime_isoformat)
   --output.format {human_readable,json}
                         Output format. (type: None, default: human_readable)
   -o, --output.file FILE
                         Path of JSON output file. If not set the output is written to console / stdout (type: None, default: None)
-
 ```
 
 

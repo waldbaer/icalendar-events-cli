@@ -19,6 +19,7 @@ class CliResult:
 
     exit_code: int
     stdout: str
+    stderr: str
     stdout_lines: List[str]
     stdout_as_json: Optional[dict]
     fileout: str
@@ -29,6 +30,7 @@ class CliResult:
         self,
         exit_code: int,
         stdout: str,
+        stderr: str,
         stdout_lines: List[str],
         stdout_as_json: Optional[dict] = None,
         fileout: str = None,
@@ -40,6 +42,7 @@ class CliResult:
         Arguments:
             exit_code: Numeric process exit code
             stdout: Captured stdout
+            stderr: Captured stderr
             stdout_lines: Captured stdout splitted into individual lines
             stdout_as_json: Optional stdout parsed as JSON
             fileout: Captured output in output file
@@ -48,6 +51,7 @@ class CliResult:
         """
         self.exit_code = exit_code
         self.stdout = stdout
+        self.stderr = stderr
         self.stdout_lines = stdout_lines
         self.stdout_as_json = stdout_as_json
         self.fileout = fileout
@@ -69,6 +73,7 @@ def run_cli(cli_args: str, capsys: pytest.CaptureFixture, output_path: Optional[
     exit_code = cli(shlex.split(cli_args))
     capture_result = capsys.readouterr()
     stdout = capture_result.out.rstrip()
+    stderr = capture_result.err.rstrip()
     stdout_lines = stdout.splitlines()
     fileout = None
     fileout_lines = None
@@ -76,7 +81,9 @@ def run_cli(cli_args: str, capsys: pytest.CaptureFixture, output_path: Optional[
         with open(file=output_path, encoding="UTF-8") as file:
             fileout_lines = file.readlines()
             fileout = os.linesep.join(fileout_lines)
-    return CliResult(exit_code, stdout, stdout_lines, stdout_as_json=None, fileout=fileout, fileout_lines=fileout_lines)
+    return CliResult(
+        exit_code, stdout, stderr, stdout_lines, stdout_as_json=None, fileout=fileout, fileout_lines=fileout_lines
+    )
 
 
 def run_cli_json(cli_args: str, capsys: pytest.CaptureFixture, output_path: Optional[str] = None) -> Dict:
