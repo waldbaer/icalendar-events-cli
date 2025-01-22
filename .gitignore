@@ -2,7 +2,7 @@
 .vscode
 
 # Configuration containing credentials
-config.json
+*config.json
 
 # git
 *.orig

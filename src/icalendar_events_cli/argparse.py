@@ -79,13 +79,6 @@ Also URLs to local files with schema file://<absolute path to local file> are su
     arg_parser.add_argument("--calendar.encoding", default="UTF-8", help="Encoding of the calendar")
 
     # ---- Filtering ----
-    arg_parser.add_argument(
-        "-f",
-        "--filter.summary",
-        type=regex_type,
-        default=".*",
-        help="RegEx to filter calendar events based on summary field.",
-    )
 
     arg_parser.add_argument(
         "-s",
@@ -100,6 +93,31 @@ Also URLs to local files with schema file://<absolute path to local file> are su
         type=datetime_isoformat,
         default=_local_timezone.localize(datetime.combine(datetime.now(), datetime.max.time())).replace(microsecond=0),
         help="End date/time of event filter by time (ISO format). Default: end of today",
+    )
+
+    arg_parser.add_argument(
+        "-f",
+        "--filter.summary",
+        type=regex_type,
+        required=False,
+        default=None,
+        help="RegEx to filter calendar events based on the summary attribute.",
+    )
+
+    arg_parser.add_argument(
+        "--filter.description",
+        type=regex_type,
+        required=False,
+        default=None,
+        help="RegEx to filter calendar events based on the description attribute.",
+    )
+
+    arg_parser.add_argument(
+        "--filter.location",
+        type=regex_type,
+        required=False,
+        default=None,
+        help="RegEx to filter calendar events based on the location attribute.",
     )
 
     # ---- Output ----

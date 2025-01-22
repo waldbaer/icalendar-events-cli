@@ -19,7 +19,7 @@ Leveraging the powerful [jsonargparse](https://jsonargparse.readthedocs.io/) lib
   - configurable encoding
 - Filtering
   - by start- and end-date range
-  - by event summary text (via RegEx)
+  - by event summary, description or location text (RegEx match)
 - Different Outputs
   - Formats: JSON, human-readable (pretty printed)
   - Targets: shell (stdout), file
@@ -88,10 +88,11 @@ icalendar-events-cli --calendar.url https://www.thunderbird.net/media/caldata/au
   --filter.end-date $(date +%Y)-12-31T02:00:00+01:00 \
   --filter.summary ".*(Weihnacht|Oster).*"
 
-Start Date:       2025-01-01T02:00:00+02:00
-End Date:         2025-12-31T02:00:00+01:00
-Summary Filter:   .*(Weihnacht|Oster).*
-Number of Events: 3
+Start Date:         2025-01-01T02:00:00+02:00
+End Date:           2025-12-31T02:00:00+01:00
+Summary Filter:     .*(Weihnacht|Oster).*
+Number of Events:   3
+
 2025-04-20T00:00:00+02:00 -> 2025-04-20T23:59:59+02:00 [86399 sec]     | Ostersonntag  (Brandenburg) | Description: Common local holiday -  Der Ostersonntag ist laut der christlichen Bibel ein Feiertag in Deutschland, um die Auferstehung Jesu Christi zu feiern.
 2025-04-21T00:00:00+02:00 -> 2025-04-21T23:59:59+02:00 [86399 sec]     | Ostermontag  | Description: Christian -  Viele Menschen in Deutschland begehen jÃ¤hrlich den Ostermontag am Tag nach dem Ostersonntag. Es ist in allen Bundesstaaten ein Feiertag.
 2025-12-25T00:00:00+01:00 -> 2025-12-25T23:59:59+01:00 [86399 sec]     | Weihnachten  | Description: Christian -  Der Weihnachtstag markiert die Geburt Jesu Christi und ist ein gesetzlicher Feiertag in Deutschland. Es ist jedes Jahr am 25. Dezember.
@@ -123,10 +124,13 @@ Create `school-summer-vacation.json` containing calendar URL, summary filter and
 Query the calendar for summer vacation until end of next year:
 ```
 icalendar-events-cli --config school-summer-vacation.json --filter.end-date $(($(date +%Y) + 1))-12-31T23:59:59
+
 {
-  "start-date": "2025-01-22T19:04:07+01:00",
-  "end-date": "2026-12-31T23:59:59",
-  "summary-filter": "Sommer.*",
+  "filter": {
+    "start-date": "2025-01-25T11:09:20+01:00",
+    "end-date": "2026-12-31T23:59:59+01:00",
+    "summary": "Sommer.*"
+  },
   "events": [
     {
       "start-date": "2025-07-31T00:00:00+02:00",
@@ -154,7 +158,8 @@ Details about all available options:
 ```
 Usage: icalendar-events-cli [-h] [--version] [-c CONFIG] --calendar.url URL [--calendar.verify-url {true,false}]
                             [--calendar.user USER] [--calendar.password PASSWORD] [--calendar.encoding ENCODING]
-                            [-f SUMMARY] [-s START_DATE] [-e END_DATE] [--output.format {human_readable,json}] [-o FILE]
+                            [-s START_DATE] [-e END_DATE] [-f SUMMARY] [--filter.description DESCRIPTION]
+                            [--filter.location LOCATION] [--output.format {human_readable,json}] [-o FILE]
 
 Command-line tool to read events from a iCalendar (ICS) files. | Version 1.0.0 | Copyright 2023-2025
 
@@ -174,12 +179,16 @@ Options:
                         Password for calendar URL HTTP authentication (basic authentication) (type: None, default: None)
   --calendar.encoding ENCODING
                         Encoding of the calendar (default: UTF-8)
-  -f, --filter.summary SUMMARY
-                        RegEx to filter calendar events based on summary field. (type: regex_type, default: .*)
   -s, --filter.start-date START_DATE
-                        Start date/time of event filter by time (ISO format). Default: now (type: datetime_isoformat)
+                        Start date/time of event filter by time (ISO format). Default: now (type: datetime_isoformat, default: now)
   -e, --filter.end-date END_DATE
-                        End date/time of event filter by time (ISO format). Default: end of today (type: datetime_isoformat)
+                        End date/time of event filter by time (ISO format). Default: end of today (type: datetime_isoformat, default: end of today)
+  -f, --filter.summary SUMMARY
+                        RegEx to filter calendar events based on the summary attribute. (type: regex_type, default: None)
+  --filter.description DESCRIPTION
+                        RegEx to filter calendar events based on the description attribute. (type: regex_type, default: None)
+  --filter.location LOCATION
+                        RegEx to filter calendar events based on the location attribute. (type: regex_type, default: None)
   --output.format {human_readable,json}
                         Output format. (type: None, default: human_readable)
   -o, --output.file FILE
