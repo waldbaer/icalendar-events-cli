@@ -50,7 +50,22 @@ def filter_events(events: CalendarQuery, filter_config: dict, encoding: str) -> 
     """
     if filter_config.summary is not None:
         events = filter(
-            lambda event: re.match(filter_config.summary, get_event_summary(event, encoding)) is not None,
+            lambda event: (summary := get_event_summary(event, encoding)) is not None
+            and re.match(filter_config.summary, summary) is not None,
+            events,
+        )
+
+    if filter_config.description is not None:
+        events = filter(
+            lambda event: (description := get_event_description(event, encoding)) is not None
+            and re.match(filter_config.description, description) is not None,
+            events,
+        )
+
+    if filter_config.location is not None:
+        events = filter(
+            lambda event: (location := get_event_location(event, encoding)) is not None
+            and re.match(filter_config.location, location) is not None,
             events,
         )
 

@@ -42,6 +42,15 @@ def output_json(events: CalendarQuery, config: dict) -> None:
         events: Calendar events.
         config: Configuration hierarchy.
     """
+    filters = {"start-date": config.filter.start_date.isoformat(), "end-date": config.filter.end_date.isoformat()}
+    if config.filter.summary:
+        filters["summary"] = config.filter.summary
+    if config.filter.description:
+        filters["description"] = config.filter.description
+    if config.filter.location:
+        filters["location"] = config.filter.location
+
+    # Detailed Events List
     events_output = []
     for event in events:
         event_output = {
@@ -58,12 +67,7 @@ def output_json(events: CalendarQuery, config: dict) -> None:
             event_output["location"] = location
         events_output.append(event_output)
 
-    json_hierarchy = {
-        "start-date": config.filter.start_date.isoformat(),
-        "end-date": config.filter.end_date.isoformat(),
-        "summary-filter": config.filter.summary,
-        "events": events_output,
-    }
+    json_hierarchy = {"filter": filters, "events": events_output}
 
     # Finally output the JSON hierarchy to stdout or the configured file
     if config.output.file is None:
@@ -74,7 +78,7 @@ def output_json(events: CalendarQuery, config: dict) -> None:
 
 
 def output_human_readable(events: CalendarQuery, config: dict) -> None:
-    """Output the events in human readble format.
+    """Output the events in human readable format.
 
     Arguments:
         events: Calendar events.
@@ -82,10 +86,15 @@ def output_human_readable(events: CalendarQuery, config: dict) -> None:
     """
     output = []
 
-    output.append(f"Start Date:       {config.filter.start_date.isoformat()}")
-    output.append(f"End Date:         {config.filter.end_date.isoformat()}")
-    output.append(f"Summary Filter:   {config.filter.summary}")
-    output.append(f"Number of Events: {len(events)}")
+    output.append(f"Start Date:         {config.filter.start_date.isoformat()}")
+    output.append(f"End Date:           {config.filter.end_date.isoformat()}")
+    if config.filter.summary:
+        output.append(f"Summary Filter:     {config.filter.summary}")
+    if config.filter.description:
+        output.append(f"Description Filter: {config.filter.description}")
+    if config.filter.location:
+        output.append(f"Location Filter:    {config.filter.location}")
+    output.append(f"Number of Events:   {len(events)}{os.linesep}")
 
     for event in events:
         start = get_event_dtstart(event)

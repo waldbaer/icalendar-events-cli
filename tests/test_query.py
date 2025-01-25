@@ -106,6 +106,27 @@ def build_basicauth_cli_arg(username: str, password: str) -> str:
     return cli_arg
 
 
+def build_filter_cli_arg(filter_summary: str, filter_description: str, filter_location: str) -> str:
+    """Build --filter.summary/description/location cli arguments.
+
+    Arguments:
+        filter_summary: Optional summary filter
+        filter_description: Optional description filter
+        filter_location: Optional location filter
+
+    Returns:
+        cli filter arguments
+    """
+    cli_arg = ""
+    if filter_summary != "":
+        cli_arg += f" --filter.summary {filter_summary}"
+    if filter_description != "":
+        cli_arg += f" --filter.description {filter_description}"
+    if filter_location != "":
+        cli_arg += f" --filter.location {filter_location}"
+    return cli_arg
+
+
 def build_output_file_cli_arg(output_path: Optional[str]) -> str:
     """Build --output.file cli argument.
 
@@ -132,9 +153,13 @@ test_queries = [
     # https://www.thunderbird.net/media/caldata/autogen/GermanHolidays.ics
     (
         "/GermanHolidays.ics",
+        # filter
         localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
         localized_date_time(year=2026, month=12, day=31, hour=23, minute=59, second=59),
         ".*Oster(sonntag|montag).*",
+        "",
+        "",
+        # expected events
         [
             ExpectedEvent(
                 summary="Ostersonntag.*",
@@ -173,9 +198,13 @@ test_queries = [
     # https://www.thunderbird.net/media/caldata/autogen/GermanHolidays.ics
     (
         "/GermanHolidays.ics",
+        # filter
         localized_date_time(year=2025, month=10, day=3, hour=0, minute=0, second=0),
         localized_date_time(year=2025, month=10, day=4, hour=23, minute=59, second=59),
         ".*Einheit.*",
+        "",
+        "",
+        # expected events
         [
             ExpectedEvent(
                 summary="Tag der Deutschen Einheit",
@@ -193,9 +222,13 @@ test_queries = [
     # Recurring daily with until date
     (
         "/recurring_events.ics",
+        # filter
         localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
         localized_date_time(year=2025, month=2, day=28, hour=23, minute=59, second=59),
         "recurring_event_daily_until_3days",
+        "description_recurring_event_daily_until_3days",
+        "location_recurring_event_daily_until_3days",
+        # expected events
         [
             ExpectedEvent(
                 summary="recurring_event_daily_until_3days",
@@ -226,9 +259,13 @@ test_queries = [
     # Recurring every second day.
     (
         "/recurring_events.ics",
+        # filter
         localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
         localized_date_time(year=2025, month=2, day=28, hour=23, minute=59, second=59),
-        "recurring_event_every_second_day_count2",
+        "",
+        "description_recurring_event_every_second_day_count2",
+        "",
+        # expected events
         [
             ExpectedEvent(
                 summary="recurring_event_every_second_day_count2",
@@ -252,10 +289,14 @@ test_queries = [
     # Recurring weekly.
     (
         "/recurring_events.ics",
+        # filter
         localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
         localized_date_time(year=2025, month=2, day=28, hour=23, minute=59, second=59),
         "recurring_event_weekly_2weeks",
+        "",
+        "",
         [
+            # expected events
             ExpectedEvent(
                 summary="recurring_event_weekly_2weeks",
                 description="description_recurring_event_weekly_2weeks",
@@ -278,9 +319,13 @@ test_queries = [
     # Recurring weekly. Query only first week.
     (
         "/recurring_events.ics",
+        # filter
         localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
         localized_date_time(year=2025, month=1, day=7, hour=23, minute=59, second=59),
         "recurring_event_weekly_2weeks",
+        "",
+        "",
+        # expected events
         [
             ExpectedEvent(
                 summary="recurring_event_weekly_2weeks",
@@ -297,9 +342,13 @@ test_queries = [
     # Recurring monthly.
     (
         "/recurring_events.ics",
+        # filter
         localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
         localized_date_time(year=2025, month=12, day=31, hour=23, minute=59, second=59),
-        "recurring_event_monthly_3months",
+        "",
+        "",
+        "location_recurring_event_monthly_3months",
+        # expected events
         [
             ExpectedEvent(
                 summary="recurring_event_monthly_3months",
@@ -330,9 +379,13 @@ test_queries = [
     # Recurring yearly.
     (
         "/recurring_events.ics",
+        # filter
         localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
         localized_date_time(year=2035, month=12, day=31, hour=23, minute=59, second=59),
         "recurring_event_yearly_2years_with_fullday_event",
+        "",
+        "",
+        # expected events
         [
             ExpectedEvent(
                 summary="recurring_event_yearly_2years_with_fullday_event",
@@ -357,9 +410,13 @@ test_queries = [
     # github issue #6
     (
         "/other_examples.ics",
+        # filter
         localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0),
         localized_date_time(year=2025, month=12, day=31, hour=23, minute=59, second=59),
         "github_issue_#6",
+        "",
+        "",
+        # expected events
         [
             ExpectedEvent(
                 summary="github_issue_#6",
@@ -377,7 +434,8 @@ test_queries = [
 
 
 @pytest.mark.parametrize(
-    "calendar_url,start_date,end_date,summary_filter,expected_events,username,password",
+    "calendar_url,start_date,end_date,filter_summary,filter_description,filter_location,"
+    + "expected_events,username,password",
     test_queries,
 )
 @pytest.mark.parametrize("output_file", [None, "icalendar_events_cli_test.json"])
@@ -385,7 +443,9 @@ def test_ct_valid_query_outputformat_json(
     calendar_url: str,
     start_date: datetime,
     end_date: datetime,
-    summary_filter: str,
+    filter_summary: str,
+    filter_description: str,
+    filter_location: str,
     expected_events: list[ExpectedEvent],
     username: str,
     password: str,
@@ -400,7 +460,9 @@ def test_ct_valid_query_outputformat_json(
         calendar_url: ICS calendar URL,
         start_date: Start Date
         end_date: End Date,
-        summary_filter: Summary Filter
+        filter_summary: summary filter
+        filter_description: description filter
+        filter_location: location filter
         expected_events: List of expected events
         username: Username for basicAuth
         password: Password for basicAuth
@@ -415,10 +477,10 @@ def test_ct_valid_query_outputformat_json(
     calendar_url = httpserver.url_for(calendar_url)
     output_path = f"{tmp_path}/{output_file}" if output_file else None
     args = (
-        f"--calendar.url {calendar_url}"
+        f"--output.format json --calendar.url {calendar_url}"
         + build_basicauth_cli_arg(username, password)
         + f" --filter.start-date {start_date.isoformat()} --filter.end-date {end_date.isoformat()}"
-        + f" --filter.summary {summary_filter} --output.format json"
+        + build_filter_cli_arg(filter_summary, filter_description, filter_location)
         + build_output_file_cli_arg(output_path)
     )
 
@@ -432,38 +494,48 @@ def test_ct_valid_query_outputformat_json(
         json_output = cli_result.fileout_as_json
     assert json_output is not None
 
-    assert json_output["start-date"] == start_date.isoformat()
-    assert json_output["end-date"] == end_date.isoformat()
-    assert json_output["summary-filter"] == summary_filter
+    json_filter = json_output["filter"]
+    assert json_filter["start-date"] == start_date.isoformat()
+    assert json_filter["end-date"] == end_date.isoformat()
+    if filter_summary:
+        assert json_filter["summary"] == filter_summary
+    if filter_description:
+        assert json_filter["description"] == filter_description
+    if filter_location:
+        assert json_filter["location"] == filter_location
 
-    events = json_output["events"]
-    assert len(events) == len(expected_events)
+    json_events = json_output["events"]
+    assert len(json_events) == len(expected_events)
 
     for events_index, expected_event in enumerate(expected_events):
-        assert re.match(expected_event.summary, events[events_index]["summary"])
-        assert expected_event.start_date.isoformat() == events[events_index]["start-date"]
-        assert expected_event.end_date.isoformat() == events[events_index]["end-date"]
+        assert re.match(expected_event.summary, json_events[events_index]["summary"])
+        assert expected_event.start_date.isoformat() == json_events[events_index]["start-date"]
+        assert expected_event.end_date.isoformat() == json_events[events_index]["end-date"]
 
         if expected_event.description is not None:
-            assert re.match(expected_event.description, events[events_index]["description"])
+            assert re.match(expected_event.description, json_events[events_index]["description"])
         else:
-            assert "description" not in events[events_index]
+            assert "description" not in json_events[events_index]
 
         if expected_event.location is not None:
-            assert re.match(expected_event.location, events[events_index]["location"])
+            assert re.match(expected_event.location, json_events[events_index]["location"])
         else:
-            assert "location" not in events[events_index]
+            assert "location" not in json_events[events_index]
 
 
 @pytest.mark.parametrize(
-    "calendar_url,start_date,end_date,summary_filter,expected_events,username,password", test_queries
+    "calendar_url,start_date,end_date,filter_summary,filter_description,filter_location,"
+    + "expected_events,username,password",
+    test_queries,
 )
 @pytest.mark.parametrize("output_file", [None, "icalendar_events_cli_test.json"])
 def test_ct_valid_query_outputformat_humanreadable(
     calendar_url: str,
     start_date: datetime,
     end_date: datetime,
-    summary_filter: str,
+    filter_summary: str,
+    filter_description: str,
+    filter_location: str,
     expected_events: list[ExpectedEvent],
     username: str,
     password: str,
@@ -478,7 +550,9 @@ def test_ct_valid_query_outputformat_humanreadable(
         calendar_url: ICS calendar URL,
         start_date: Start Date
         end_date: End Date,
-        summary_filter: Summary Filter
+        filter_summary: summary filter
+        filter_description: description filter
+        filter_location: location filter
         expected_events: List of expected events
         username: Username for basicAuth
         password: Password for basicAuth
@@ -493,11 +567,11 @@ def test_ct_valid_query_outputformat_humanreadable(
     calendar_url = httpserver.url_for(calendar_url)
     output_path = f"{tmp_path}/{output_file}" if output_file else None
     args = (
-        f"--calendar.url {calendar_url} --calendar.verify-url false"
+        f"--output.format human_readable --calendar.url {calendar_url} --calendar.verify-url false"
         + build_basicauth_cli_arg(username, password)
         + f" --filter.start-date {start_date.isoformat()} --filter.end-date {end_date.isoformat()}"
-        + f" --filter.summary {summary_filter} --output.format human_readable"
         + build_output_file_cli_arg(output_path)
+        + build_filter_cli_arg(filter_summary, filter_description, filter_location)
     )
 
     cli_result = run_cli(args, capsys, output_path)
@@ -509,16 +583,28 @@ def test_ct_valid_query_outputformat_humanreadable(
     else:
         output_lines = cli_result.fileout_lines
     assert output_lines is not None
+    joined_lines = "\n".join(output_lines)
 
-    header_lines = 4  # start- / end-date, summary filter, number of events
-    assert len(output_lines) >= (header_lines + len(expected_events))
+    assert f"Start Date:         {start_date.strftime('%Y-%m-%d')}" in joined_lines
+    assert f"End Date:           {end_date.strftime('%Y-%m-%d')}" in joined_lines
+    if filter_summary != "":
+        assert f"Summary Filter:     {filter_summary}" in joined_lines
+    if filter_description != "":
+        assert f"Description Filter: {filter_description}" in joined_lines
+    if filter_location != "":
+        assert f"Location Filter:    {filter_location}" in joined_lines
+    assert f"Number of Events:   {len(expected_events)}" in joined_lines
 
-    assert f"Start Date:       {start_date.strftime('%Y-%m-%d')}" in output_lines[0]
-    assert f"End Date:         {end_date.strftime('%Y-%m-%d')}" in output_lines[1]
-    assert f"Summary Filter:   {summary_filter}" in output_lines[2]
-    assert f"Number of Events: {len(expected_events)}" in output_lines[3]
+    header_lines = 4  # start- / end-date, number of events, empty line at end
+    if filter_summary != "":
+        header_lines += 1
+    if filter_description != "":
+        header_lines += 1
+    if filter_location != "":
+        header_lines += 1
 
     events_output_lines = output_lines[header_lines:]
+    assert len(events_output_lines) == len(expected_events)
 
     for events_index, expected_event in enumerate(expected_events):
         expected_start_end = f"{expected_event.start_date.isoformat()} -> {expected_event.end_date.isoformat()}"
