@@ -30,14 +30,14 @@ def cli(arg_list: Optional[list[str]] = None) -> int:
         Numeric exit code
     """
     try:
-        args = parse_config(
+        config = parse_config(
             prog=__prog__,
             version=importlib.metadata.version(__dist_name__),
             copy_right=__copyright__,
             author=__author__,
             arg_list=arg_list,
         )
-        return _main_logic(args)
+        return _main_logic(config)
 
     except SystemExit as e:
         return e.code
@@ -50,11 +50,10 @@ def cli(arg_list: Optional[list[str]] = None) -> int:
         return 1
 
 
-def _main_logic(args: dict) -> int:
-    calendar_ics = download_ics(args)
-    events = parse_calendar(args, calendar_ics)
-    if args.summaryFilter is not None:
-        events = filter_events(events, args.summaryFilter, args.encoding)
-    output_events(args, events)
+def _main_logic(config: dict) -> int:
+    calendar_ics = download_ics(config.calendar)
+    events = parse_calendar(calendar_ics, config.filter)
+    events = filter_events(events, config.filter, config.calendar.encoding)
+    output_events(events, config)
 
     return os.EX_OK

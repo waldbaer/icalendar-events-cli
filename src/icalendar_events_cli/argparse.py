@@ -1,19 +1,28 @@
 """Argument parsing."""
 
 # ---- Imports ----
-import argparse
-import datetime
+import re
+import sys
+from argparse import ArgumentTypeError
+from datetime import datetime
 from typing import Optional
 
 import pytz
+from jsonargparse import ArgumentParser, DefaultHelpFormatter
+from pydantic import SecretStr
+from rich_argparse import RawTextRichHelpFormatter
 from tzlocal import get_localzone
 
 from .output import OutputFormat
 
-# ---- Constants & Types -----------------------------------------------------------------------------------------------
+# ---- Globals ---------------------------------------------------------------------------------------------------------
+
+_local_timezone = pytz.timezone(get_localzone().key)
 
 
 # ---- CommandLine parser ----------------------------------------------------------------------------------------------
+class E3DCCliHelpFormatter(DefaultHelpFormatter, RawTextRichHelpFormatter):
+    """Custom CLI help formatter: Combined DefaultHelpFormatter and RichHelpFormatter."""
 
 
 def parse_config(prog: str, version: str, copy_right: str, author: str, arg_list: Optional[list[str]] = None) -> dict:
@@ -29,51 +38,152 @@ def parse_config(prog: str, version: str, copy_right: str, author: str, arg_list
     Returns:
         Dict: Parsed configuration options.
     """
-    argparser = argparse.ArgumentParser(
-        prog=prog, description="Command-line tool to read events from a iCalendar (ICS)."
+    arg_parser = ArgumentParser(
+        prog=prog,
+        description="Command-line tool to read events from a iCalendar (ICS) files."
+        + f" | Version {version} | {copy_right}",
+        version=f"| Version {version}\n{copy_right} {author}",
+        default_config_files=["./config.json"],
+        print_config=None,
+        env_prefix="ICALENDAR_EVENTS_CLI",
+        default_env=False,
+        formatter_class=E3DCCliHelpFormatter,
     )
 
-    local_timezone = pytz.timezone(get_localzone().key)
+    arg_parser.add_argument("-c", "--config", action="config", help="""Path to JSON configuration file.""")
 
-    argparser.add_argument("--version", action="version", version=f"{version}\n{copy_right} {author}")
-    argparser.add_argument(
-        "--verbose",
-        "-v",
-        action="count",
-        default=1,
-        help="Increase log-level. -v: INFO, -vv DEBUG, ... Default: WARNING",
-    )
-    argparser.add_argument("-u", "--url", dest="url", required=True, help="icalendar URL to be parsed.")
-    argparser.add_argument(
-        "-b", "--basicAuth", dest="basicAuth", help='Basic authentication for URL in format "<user>:<password>".'
-    )
-    argparser.add_argument(
-        "-f", "--summaryFilter", dest="summaryFilter", help="RegEx to filter calendar events based on summary field."
-    )
-    argparser.add_argument(
-        "-s",
-        "--startDate",
-        type=datetime.datetime.fromisoformat,
-        help="Start date/time of event filter by time (ISO format). Default: now",
-        default=local_timezone.localize(datetime.datetime.now()).replace(microsecond=0),
-    )
-    argparser.add_argument(
-        "-e",
-        "--endDate",
-        type=datetime.datetime.fromisoformat,
+    # ---- Calendar URL / access ----
+    arg_parser.add_argument(
+        "--calendar.url",
+        type=str,
         required=True,
-        help="End date/time of event filter by time (ISO format).",
+        help="""URL of the iCalendar (ICS).
+Also URLs to local files with schema file://<absolute path to local file> are supported.""",
     )
-    argparser.add_argument(
-        "-o",
-        "--outputFormat",
-        default=OutputFormat.LOGGER,
+    arg_parser.add_argument(
+        "--calendar.verify-url",
+        type=bool,
+        default=True,
+        help="Configure SSL verification of the URL",
+    )
+    arg_parser.add_argument(
+        "--calendar.user",
+        type=SecretStr,
+        help="Username for calendar URL HTTP authentication (basic authentication)",
+    )
+    arg_parser.add_argument(
+        "--calendar.password",
+        type=SecretStr,
+        help="Password for calendar URL HTTP authentication (basic authentication)",
+    )
+    arg_parser.add_argument("--calendar.encoding", default="UTF-8", help="Encoding of the calendar")
+
+    # ---- Filtering ----
+    arg_parser.add_argument(
+        "-f",
+        "--filter.summary",
+        type=regex_type,
+        default=".*",
+        help="RegEx to filter calendar events based on summary field.",
+    )
+
+    arg_parser.add_argument(
+        "-s",
+        "--filter.start-date",
+        type=datetime_isoformat,
+        default=_local_timezone.localize(datetime.now().replace(microsecond=0)).replace(microsecond=0),
+        help="Start date/time of event filter by time (ISO format). Default: now",
+    )
+    arg_parser.add_argument(
+        "-e",
+        "--filter.end-date",
+        type=datetime_isoformat,
+        default=_local_timezone.localize(datetime.combine(datetime.now(), datetime.max.time())).replace(microsecond=0),
+        help="End date/time of event filter by time (ISO format). Default: end of today",
+    )
+
+    # ---- Output ----
+    arg_parser.add_argument(
+        "--output.format",
+        default=OutputFormat.human_readable,
         type=OutputFormat,
-        choices=list(OutputFormat),
         help="Output format.",
     )
-    argparser.add_argument(
-        "-c", "--encoding", dest="encoding", default="UTF-8", help="Encoding of the calendar. Default: UTF-8"
+
+    arg_parser.add_argument(
+        "-o",
+        "--output.file",
+        type=Optional[str],
+        help="Path of JSON output file. If not set the output is written to console / stdout",
     )
 
-    return argparser.parse_args(args=arg_list)
+    # ---- Finally parse the inputs  ----
+    config = arg_parser.parse_args(args=arg_list)
+
+    # ---- Post-parse validation ----
+    _validate_config(config)
+
+    return config
+
+
+def datetime_isoformat(arg: str) -> datetime:
+    """Convert isoformat cli argument to datetime.
+
+    Arguments:
+        arg: cli argument in ISO format
+
+    Raises:
+        ArgumentTypeError: in case the parsing failed
+
+    Returns:
+        Parsed datetime instance.
+    """
+    try:
+        dt = datetime.fromisoformat(str(arg))
+    except ValueError:
+        raise ArgumentTypeError(f"invalid datetime value (expected ISO 8601 format): '{arg}'") from None
+
+    if dt.tzinfo is None:
+        dt = _local_timezone.localize(dt)
+    return dt
+
+
+def regex_type(arg: str) -> str:
+    """Check if a string is a valid RegEx.
+
+    Arguments:
+        arg: cli argument to be checked
+
+    Raises:
+        ArgumentTypeError: in case the parsing failed
+
+    Returns:
+        unmodified string argument
+    """
+    try:
+        re.compile(arg)
+    except re.error as e:
+        raise ArgumentTypeError(f"invalid RegEx value '{arg}': {e}") from None
+    return arg
+
+
+def _validate_config(config: dict) -> None:
+    """Validate the configuration.
+
+    Arguments:
+        config: Parsed configuration hierarchy.
+    """
+    found_config_issues = []
+
+    if config.filter.start_date > config.filter.end_date:
+        found_config_issues.append(
+            "filter.end-date must be after filter.start-state"
+            + f" (configured: {config.filter.start_date} -> {config.filter.end_date})"
+        )
+
+    # Finally report all found issues
+    if found_config_issues:
+        print("ERROR: invalid configuration / parameters:", file=sys.stderr)
+        for found_config_issue in found_config_issues:
+            print(f"- {found_config_issue}", file=sys.stderr)
+        sys.exit(1)

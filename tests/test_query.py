@@ -13,7 +13,7 @@ from click import DateTime
 from pytest_httpserver import HTTPServer
 from tzlocal import get_localzone
 
-from tests.util_runner import run_cli, run_cli_stdout_json
+from tests.util_runner import run_cli, run_cli_json
 
 
 # ---- Utilities -------------------------------------------------------------------------------------------------------
@@ -100,10 +100,25 @@ def build_basicauth_cli_arg(username: str, password: str) -> str:
     Returns:
         cli argument for --basicAuth
     """
-    basic_auth = ""
+    cli_arg = ""
     if username != "" and password != "":
-        basic_auth = f"--basicAuth '{username}:{password}' "
-    return basic_auth
+        cli_arg = f" --calendar.user={username} --calendar.password={password} "
+    return cli_arg
+
+
+def build_output_file_cli_arg(output_path: Optional[str]) -> str:
+    """Build --output.file cli argument.
+
+    Arguments:
+        output_path: Optional output file path
+
+    Returns:
+        cli argument for --output.file
+    """
+    cli_arg = ""
+    if output_path is not None:
+        cli_arg = f" --output.file={output_path} "
+    return cli_arg
 
 
 # ---- Testcases -------------------------------------------------------------------------------------------------------
@@ -365,6 +380,7 @@ test_queries = [
     "calendar_url,start_date,end_date,summary_filter,expected_events,username,password",
     test_queries,
 )
+@pytest.mark.parametrize("output_file", [None, "icalendar_events_cli_test.json"])
 def test_ct_valid_query_outputformat_json(
     calendar_url: str,
     start_date: datetime,
@@ -373,7 +389,9 @@ def test_ct_valid_query_outputformat_json(
     expected_events: list[ExpectedEvent],
     username: str,
     password: str,
+    output_file: Optional[str],
     httpserver: HTTPServer,
+    tmp_path: str,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Test calendar queries with output format 'JSON'.
@@ -386,35 +404,45 @@ def test_ct_valid_query_outputformat_json(
         expected_events: List of expected events
         username: Username for basicAuth
         password: Password for basicAuth
+        output_file: JSON output file name. If not set JSON output is written to console / stdout.
         httpserver: Mocked HTTP server
+        tmp_path: Temporary unique file path provided by built-in fixture.
         capsys: System capture
     """
     prepare_local_httpserver_mock(calendar_url, username, password, httpserver)
 
     # Run icalendar-events-cli
     calendar_url = httpserver.url_for(calendar_url)
-    basic_auth = build_basicauth_cli_arg(username, password)
+    output_path = f"{tmp_path}/{output_file}" if output_file else None
     args = (
-        f"--url {calendar_url} {basic_auth}"
-        + f"--startDate {start_date.isoformat()} --endDate {end_date.isoformat()}"
-        + f" --summaryFilter {summary_filter} --outputFormat json"
+        f"--calendar.url {calendar_url}"
+        + build_basicauth_cli_arg(username, password)
+        + f" --filter.start-date {start_date.isoformat()} --filter.end-date {end_date.isoformat()}"
+        + f" --filter.summary {summary_filter} --output.format json"
+        + build_output_file_cli_arg(output_path)
     )
 
-    cli_result = run_cli_stdout_json(args, capsys)
+    cli_result = run_cli_json(args, capsys, output_path)
     assert cli_result.exit_code == os.EX_OK
 
-    json_output = cli_result.stdout_as_json
-    assert json_output["startDate"] == start_date.isoformat()
-    assert json_output["endDate"] == end_date.isoformat()
-    assert json_output["summaryFilter"] == summary_filter
+    json_output = None
+    if output_path is None:
+        json_output = cli_result.stdout_as_json
+    else:
+        json_output = cli_result.fileout_as_json
+    assert json_output is not None
+
+    assert json_output["start-date"] == start_date.isoformat()
+    assert json_output["end-date"] == end_date.isoformat()
+    assert json_output["summary-filter"] == summary_filter
 
     events = json_output["events"]
     assert len(events) == len(expected_events)
 
     for events_index, expected_event in enumerate(expected_events):
         assert re.match(expected_event.summary, events[events_index]["summary"])
-        assert expected_event.start_date.isoformat() == events[events_index]["startDate"]
-        assert expected_event.end_date.isoformat() == events[events_index]["endDate"]
+        assert expected_event.start_date.isoformat() == events[events_index]["start-date"]
+        assert expected_event.end_date.isoformat() == events[events_index]["end-date"]
 
         if expected_event.description is not None:
             assert re.match(expected_event.description, events[events_index]["description"])
@@ -430,6 +458,7 @@ def test_ct_valid_query_outputformat_json(
 @pytest.mark.parametrize(
     "calendar_url,start_date,end_date,summary_filter,expected_events,username,password", test_queries
 )
+@pytest.mark.parametrize("output_file", [None, "icalendar_events_cli_test.json"])
 def test_ct_valid_query_outputformat_humanreadable(
     calendar_url: str,
     start_date: datetime,
@@ -438,7 +467,9 @@ def test_ct_valid_query_outputformat_humanreadable(
     expected_events: list[ExpectedEvent],
     username: str,
     password: str,
+    output_file: Optional[str],
     httpserver: HTTPServer,
+    tmp_path: str,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Test calendar queries with output format 'human readable'.
@@ -451,25 +482,35 @@ def test_ct_valid_query_outputformat_humanreadable(
         expected_events: List of expected events
         username: Username for basicAuth
         password: Password for basicAuth
+        output_file: JSON output file name. If not set JSON output is written to console / stdout.
         httpserver: Mocked HTTP server
+        tmp_path: Temporary unique file path provided by built-in fixture.
         capsys: System capture
     """
     prepare_local_httpserver_mock(calendar_url, username, password, httpserver)
 
     # Run icalendar-events-cli
     calendar_url = httpserver.url_for(calendar_url)
-    basic_auth = build_basicauth_cli_arg(username, password)
+    output_path = f"{tmp_path}/{output_file}" if output_file else None
     args = (
-        f"--url {calendar_url} {basic_auth}"
-        + f" --startDate {start_date.isoformat()} --endDate {end_date.isoformat()}"
-        + f" --summaryFilter {summary_filter} --outputFormat logger --verbose"
+        f"--calendar.url {calendar_url} --calendar.verify-url false"
+        + build_basicauth_cli_arg(username, password)
+        + f" --filter.start-date {start_date.isoformat()} --filter.end-date {end_date.isoformat()}"
+        + f" --filter.summary {summary_filter} --output.format human_readable"
+        + build_output_file_cli_arg(output_path)
     )
 
-    cli_result = run_cli(args, capsys)
+    cli_result = run_cli(args, capsys, output_path)
     assert cli_result.exit_code == os.EX_OK
 
-    output_lines = cli_result.stdout_lines
-    header_lines = 4  # start / enddate, summary filter, number of events
+    output_lines = None
+    if output_path is None:
+        output_lines = cli_result.stdout_lines
+    else:
+        output_lines = cli_result.fileout_lines
+    assert output_lines is not None
+
+    header_lines = 4  # start- / end-date, summary filter, number of events
     assert len(output_lines) >= (header_lines + len(expected_events))
 
     assert f"Start Date:       {start_date.strftime('%Y-%m-%d')}" in output_lines[0]
@@ -502,7 +543,10 @@ def test_ct_invalid_url(
         capsys: System capture
     """
     invalid_url = "https://www.INVALID_URL.123/INVALID_ICS_FILE.icsx"
-    args = f"--url {invalid_url} --startDate 2025-01-01 --endDate 2025-01-17 -f xxx --outputFormat json"
+    args = (
+        f"--calendar.url {invalid_url} --filter.start-date 2025-01-01 --filter.end-date 2025-01-17"
+        + " --filter.summary xxx --output.format json"
+    )
 
     cli_result = run_cli(args, capsys)
 
@@ -523,7 +567,10 @@ def test_ct_failing_server_response(httpserver: HTTPServer, capsys: pytest.Captu
 
     start_date = localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0).isoformat()
     end_date = localized_date_time(year=2025, month=2, day=1, hour=0, minute=0, second=0).isoformat()
-    args = f"--url {calendar_url} --startDate {start_date} --endDate {end_date} -f invalid --outputFormat json"
+    args = (
+        f"--calendar.url {calendar_url} --filter.start-date {start_date} --filter.end-date {end_date}"
+        + " --filter.summary invalid --output.format json"
+    )
 
     cli_result = run_cli(args, capsys)
     assert cli_result.exit_code != os.EX_OK
