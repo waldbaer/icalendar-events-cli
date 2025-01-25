@@ -21,7 +21,7 @@ _local_timezone = pytz.timezone(get_localzone().key)
 
 
 # ---- CommandLine parser ----------------------------------------------------------------------------------------------
-class E3DCCliHelpFormatter(DefaultHelpFormatter, RawTextRichHelpFormatter):
+class HelpFormatter(DefaultHelpFormatter, RawTextRichHelpFormatter):
     """Custom CLI help formatter: Combined DefaultHelpFormatter and RichHelpFormatter."""
 
 
@@ -47,7 +47,7 @@ def parse_config(prog: str, version: str, copy_right: str, author: str, arg_list
         print_config=None,
         env_prefix="ICALENDAR_EVENTS_CLI",
         default_env=False,
-        formatter_class=E3DCCliHelpFormatter,
+        formatter_class=HelpFormatter,
     )
 
     arg_parser.add_argument("-c", "--config", action="config", help="""Path to JSON configuration file.""")
