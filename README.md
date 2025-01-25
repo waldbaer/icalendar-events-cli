@@ -45,7 +45,7 @@ pipx install icalendar-events-cli
 
 ### Setup directly from github repo / clone
 ```
-git clone git@github.com:waldbaer/icalendar-events-cli.git
+git clone https://github.com/waldbaer/icalendar-events-cli.git
 cd icalendar-events-cli
 
 python -m venv .venv
