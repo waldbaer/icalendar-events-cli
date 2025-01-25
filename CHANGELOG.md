@@ -14,19 +14,19 @@ All notable changes to this project will be documented in this file.
 - Implement tests (100% coverage)
 - Publish to [PyPI](https://pypi.org/) index
 
+### Fixes
+- Invalid start- and end-date in [#7](https://github.com/waldbaer/icalendar-events-cli/pull/7)
+
+### Dependencies
+- Bump recurring-ical-events from 3.3.3 to 3.4.1 in [#4](https://github.com/waldbaer/icalendar-events-cli/pull/4)
 
 ## [0.1.0] - 2024-11-26
 
 Initial Release
 
 ### Features
-- Download and parse iCalendar files in
+- Download and parse iCalendar files.
 - Filter events with start- and end date.
 - Filter events with RegEx on the summary (title) text.
 - Different output formats: JSON, logger
 
-### Fixes
-- Invalid start- and end-date in #7
-
-### Dependencies
-- Bump recurring-ical-events from 3.3.3 to 3.4.1 in #4
