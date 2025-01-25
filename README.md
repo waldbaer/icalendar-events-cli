@@ -37,13 +37,11 @@ Changes can be followed at [CHANGELOG.md](https://github.com/waldbaer/icalendar-
 
 ## Setup
 
-<!--
 ### With pip / pipx
 ```
 pip install icalendar-events-cli
 pipx install icalendar-events-cli
 ```
--->
 
 ### Setup directly from github repo / clone
 ```
