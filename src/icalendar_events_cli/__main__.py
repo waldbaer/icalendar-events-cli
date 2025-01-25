@@ -44,7 +44,7 @@ def cli(arg_list: Optional[list[str]] = None) -> int:
 
     except BaseException as e:  # pylint: disable=broad-exception-caught;reason=Explicitely capture all exceptions thrown during execution.
         print(
-            f"ERROR: Any error has occured!{os.linesep}{os.linesep}Exception: {str(e)}"
+            f"ERROR: Any error has occurred!{os.linesep}{os.linesep}Exception: {str(e)}"
             # f"Detailed Traceback: {traceback.format_exc()}"
         )
         return 1
