@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python Debugger: icalendar-events-cli script",
+      "type": "debugpy",
+      "request": "launch",
+      "program": ".venv/bin/icalendar-events-cli",
+      "args": ["--calendar.url", "https://www.thunderbird.net/media/caldata/autogen/GermanHolidays.ics",
+                "--filter.end-date", "2025-12-31",
+                "--filter.summary", ".*(Weihnacht|Oster).*"
+      ],
+      "justMyCode": true
+    },
+    {
+      "name": "Python Debugger: Module pytest",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "justMyCode": true,
+      "args": ["-k", "test_"]
+    },
+  ]
+}
