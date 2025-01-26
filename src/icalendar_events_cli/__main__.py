@@ -42,7 +42,7 @@ def cli(arg_list: Optional[list[str]] = None) -> int:
     except SystemExit as e:
         return e.code
 
-    except BaseException as e:  # pylint: disable=broad-exception-caught;reason=Explicitely capture all exceptions thrown during execution.
+    except BaseException as e:  # pylint: disable=broad-exception-caught;reason=Explicitly capture all exceptions thrown during execution.
         print(
             f"ERROR: Any error has occurred!{os.linesep}{os.linesep}Exception: {str(e)}"
             # f"Detailed Traceback: {traceback.format_exc()}"
@@ -51,6 +51,14 @@ def cli(arg_list: Optional[list[str]] = None) -> int:
 
 
 def _main_logic(config: dict) -> int:
+    """Main program logic.
+
+    Arguments:
+        config: Configuration hierarchy
+
+    Returns:
+        Numeric exit code
+    """
     calendar_ics = download_ics(config.calendar)
     events = parse_calendar(calendar_ics, config.filter)
     events = filter_events(events, config.filter, config.calendar.encoding)

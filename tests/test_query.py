@@ -9,7 +9,6 @@ from typing import Optional
 
 import pytest
 import pytz
-from click import DateTime
 from pytest_httpserver import HTTPServer
 from tzlocal import get_localzone
 
@@ -51,7 +50,7 @@ class ExpectedEvent:
         self.end_date = end_date
 
 
-def localized_date_time(*args: any, **kwargs: any) -> DateTime:
+def localized_date_time(*args: any, **kwargs: any) -> datetime:
     """Build a localized datetime instance.
 
     Arguments:
