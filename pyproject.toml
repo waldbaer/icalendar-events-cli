@@ -11,11 +11,11 @@ dependencies = [
     "tzlocal==5.3.1",
     "pytz==2025.2",
     "recurring-ical-events==3.6.0",
-    "requests>=2.32.3",
-    "requests-file>=2.1.0",
-    "jsonargparse>=4.36.0",
-    "rich-argparse>=1.6.0",
-    "pydantic>=2.10.5",
+    "requests==2.32.3",
+    "requests-file==2.1.0",
+    "jsonargparse==4.38.0",
+    "rich-argparse==1.7.0",
+    "pydantic==2.11.1",
 ]
 
 [project.scripts]
