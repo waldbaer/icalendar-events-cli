@@ -154,12 +154,11 @@ icalendar-events-cli --config school-summer-vacation.json --filter.end-date $(($
 Details about all available options:
 
 ```
-Usage: icalendar-events-cli [-h] [--version] [-c CONFIG] --calendar.url URL [--calendar.verify-url {true,false}]
-                            [--calendar.user USER] [--calendar.password PASSWORD] [--calendar.encoding ENCODING]
-                            [-s START_DATE] [-e END_DATE] [-f SUMMARY] [--filter.description DESCRIPTION]
-                            [--filter.location LOCATION] [--output.format {human_readable,json}] [-o FILE]
+Usage: icalendar-events-cli [-h] [--version] [-c CONFIG] --calendar.url URL [--calendar.verify-url {true,false}] [--calendar.user USER]
+                            [--calendar.password PASSWORD] [--calendar.encoding ENCODING] [-s START_DATE] [-e END_DATE] [-f SUMMARY]
+                            [--filter.description DESCRIPTION] [--filter.location LOCATION] [--output.format {human_readable,json}] [-o FILE]
 
-Command-line tool to read events from a iCalendar (ICS) files. | Version 1.0.0 | Copyright 2023-2025
+Command-line tool to read events from a iCalendar (ICS) files. | Version 1.0.1 | Copyright 2023-2025
 
 Default Config File Locations:
   ['./config.json'], Note: no existing default config file found.
