@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2025-04-02
+
+### Dependencies
+- Bump tzlocal from 5.2 to 5.3.1
+- Bump pytz from 2024.2 to 2025.2
+- Bump recurring-ical-events from 3.4.1 to 3.6.0
+- Bump jsonargparse from 4.36.0 to 4.38.0
+- Bump rich-argparse from 1.6.0 to 1.7.0
+- Bump pydantic from 2.10.5 to 2.11.1
+
 ## [1.0.0] - 2025-01-25
 
 ### Features
