@@ -15,7 +15,7 @@ dependencies = [
     "requests-file==2.1.0",
     "jsonargparse==4.41.0",
     "rich-argparse==1.7.1",
-    "pydantic==2.11.5",
+    "pydantic==2.11.9",
 ]
 
 [project.scripts]
