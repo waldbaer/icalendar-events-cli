@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 ## [1.0.2] - 2025-11-01
 
 ### Dependencies
-## What's Changed
+
 * Bump recurring-ical-events from 3.6.0 to 3.8.0
 * Bump jsonargparse from 4.38.0 to 4.42.0
 * Bump pydantic from 2.11.1 to 2.12.3
