@@ -158,7 +158,7 @@ Usage: icalendar-events-cli [-h] [--version] [-c CONFIG] --calendar.url URL [--c
                             [--calendar.password PASSWORD] [--calendar.encoding ENCODING] [-s START_DATE] [-e END_DATE] [-f SUMMARY]
                             [--filter.description DESCRIPTION] [--filter.location LOCATION] [--output.format {human_readable,json}] [-o FILE]
 
-Command-line tool to read events from a iCalendar (ICS) files. | Version 1.0.1 | Copyright 2023-2025
+Command-line tool to read events from a iCalendar (ICS) files. | Version 1.0.2 | Copyright 2023-2025
 
 Default Config File Locations:
   ['./config.json'], Note: no existing default config file found.
@@ -190,6 +190,7 @@ Options:
                         Output format. (type: None, default: human_readable)
   -o, --output.file FILE
                         Path of JSON output file. If not set the output is written to console / stdout (type: None, default: None)
+
 ```
 
 
