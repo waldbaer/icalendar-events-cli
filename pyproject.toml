@@ -27,7 +27,7 @@ build-backend = "pdm.backend"
 
 [dependency-groups]
 lint = [
-    "ruff==0.14.10",
+    "ruff==0.14.14",
 ]
 pytest = [
     "pytest-cov==7.0.0",
