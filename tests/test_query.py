@@ -5,7 +5,6 @@ import re
 from base64 import b64encode
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 import pytest
 import pytz
@@ -21,18 +20,18 @@ class ExpectedEvent:
     """Expectation of an event and it's data (summary, description, location, ...)."""
 
     summary: str
-    description: Optional[str]
-    location: Optional[str]
-    start_date: Optional[datetime]
-    end_date: Optional[datetime]
+    description: str | None
+    location: str | None
+    start_date: datetime | None
+    end_date: datetime | None
 
     def __init__(
         self,
         summary: str,
-        description: Optional[str] = None,
-        location: Optional[str] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        description: str | None = None,
+        location: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> None:
         """Construct.
 
@@ -126,7 +125,7 @@ def build_filter_cli_arg(filter_summary: str, filter_description: str, filter_lo
     return cli_arg
 
 
-def build_output_file_cli_arg(output_path: Optional[str]) -> str:
+def build_output_file_cli_arg(output_path: str | None) -> str:
     """Build --output.file cli argument.
 
     Arguments:
@@ -448,7 +447,7 @@ def test_ct_valid_query_outputformat_json(
     expected_events: list[ExpectedEvent],
     username: str,
     password: str,
-    output_file: Optional[str],
+    output_file: str | None,
     httpserver: HTTPServer,
     tmp_path: str,
     capsys: pytest.CaptureFixture[str],
@@ -538,7 +537,7 @@ def test_ct_valid_query_outputformat_humanreadable(
     expected_events: list[ExpectedEvent],
     username: str,
     password: str,
-    output_file: Optional[str],
+    output_file: str | None,
     httpserver: HTTPServer,
     tmp_path: str,
     capsys: pytest.CaptureFixture[str],
