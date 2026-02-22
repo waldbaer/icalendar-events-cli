@@ -8,7 +8,7 @@
 
 ## Introduction
 
-This command-line tool allows users to query and filter [iCalendar (RFC 5545)](https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/) calendars. It leverages the excellent [recurring-ical-events](https://github.com/niccokunzmann/python-recurring-ical-events) library for parsing and querying the calendar contents.
+This command-line tool allows users to query and filter [iCalendar (RFC 5545)](https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/) calendars. It leverages the excellent [icalendar](https://github.com/collective/icalendar) and [recurring-ical-events](https://github.com/niccokunzmann/python-recurring-ical-events) libraries for parsing and querying the calendar contents.
 
 Leveraging the powerful [jsonargparse](https://jsonargparse.readthedocs.io/) library, this tool supports configuration and control via command-line parameters or a JSON configuration file.
 
@@ -20,7 +20,7 @@ Leveraging the powerful [jsonargparse](https://jsonargparse.readthedocs.io/) lib
   - by start- and end-date range
   - by event summary, description or location text (RegEx match)
 - Different Outputs
-  - Formats: JSON, [jCal](https://datatracker.ietf.org/doc/html/rfc7265), human-readable (pretty printed)
+  - Formats: JSON, jCal ([RFC 7265](https://datatracker.ietf.org/doc/html/rfc7265)), human-readable (pretty printed)
   - Targets: shell (stdout), file
 
 ## Changelog
@@ -227,6 +227,5 @@ pdm publish --repository testpypi -u __token__
 ```
 
 ## Acknowledgments
-Special thanks to [recurring-ical-events](https://github.com/niccokunzmann/python-recurring-ical-events) for providing
-the core library that powers this tool.
+Special thanks to [icalendar](https://github.com/collective/icalendar) and [recurring-ical-events](https://github.com/niccokunzmann/python-recurring-ical-events) for providing the core libraries that power this tool.
 
