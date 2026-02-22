@@ -16,7 +16,6 @@ Leveraging the powerful [jsonargparse](https://jsonargparse.readthedocs.io/) lib
 - Download and parse iCalendar files
   - from remote HTTP URL (`https://<path to icalendar server>`)
   - from local file URL (`file://<abs. path to local ICS file>`)
-  - configurable encoding
 - Filtering
   - by start- and end-date range
   - by event summary, description or location text (RegEx match)
@@ -154,11 +153,10 @@ icalendar-events-cli --config school-summer-vacation.json --filter.end-date $(($
 Details about all available options:
 
 ```
-Usage: icalendar-events-cli [-h] [--version] [-c CONFIG] --calendar.url URL [--calendar.verify-url {true,false}] [--calendar.user USER]
-                            [--calendar.password PASSWORD] [--calendar.encoding ENCODING] [-s START_DATE] [-e END_DATE] [-f SUMMARY]
-                            [--filter.description DESCRIPTION] [--filter.location LOCATION] [--output.format {human_readable,json}] [-o FILE]
+Usage: icalendar-events-cli [-h] [--version] [-c CONFIG] --calendar.url URL [--calendar.verify-url {true,false}] [--calendar.user USER] [--calendar.password PASSWORD] [-s START_DATE]
+                            [-e END_DATE] [-f SUMMARY] [--filter.description DESCRIPTION] [--filter.location LOCATION] [--output.format {human_readable,json}] [-o FILE]
 
-Command-line tool to read events from a iCalendar (ICS) files. | Version 1.0.2 | Copyright 2023-2025
+Command-line tool to read events from a iCalendar (ICS) files. | Version 2.0.0 | Copyright 2023-2026
 
 Default Config File Locations:
   ['./config.json'], Note: no existing default config file found.
@@ -174,8 +172,6 @@ Options:
   --calendar.user USER  Username for calendar URL HTTP authentication (basic authentication) (type: None, default: None)
   --calendar.password PASSWORD
                         Password for calendar URL HTTP authentication (basic authentication) (type: None, default: None)
-  --calendar.encoding ENCODING
-                        Encoding of the calendar (default: UTF-8)
   -s, --filter.start-date START_DATE
                         Start date/time of event filter by time (ISO format). Default: now (type: datetime_isoformat, default: now)
   -e, --filter.end-date END_DATE
@@ -190,7 +186,6 @@ Options:
                         Output format. (type: None, default: human_readable)
   -o, --output.file FILE
                         Path of JSON output file. If not set the output is written to console / stdout (type: None, default: None)
-
 ```
 
 

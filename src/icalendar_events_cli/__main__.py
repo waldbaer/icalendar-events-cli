@@ -12,7 +12,7 @@ from .output import output_events
 # ---- Module Meta-Data ------------------------------------------------------------------------------------------------
 __prog__ = "icalendar-events-cli"
 __dist_name__ = "icalendar_events_cli"
-__copyright__ = "Copyright 2023-2025"
+__copyright__ = "Copyright 2023-2026"
 __author__ = "Sebastian Waldvogel"
 
 # ---- Main -----------------------------------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ def _main_logic(config: dict) -> int:
     """
     calendar_ics = download_ics(config.calendar)
     events = parse_calendar(calendar_ics, config.filter)
-    events = filter_events(events, config.filter, config.calendar.encoding)
+    events = filter_events(events, config.filter)
     output_events(events, config)
 
     return os.EX_OK

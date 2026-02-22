@@ -75,7 +75,6 @@ Also URLs to local files with schema file://<absolute path to local file> are su
         type=SecretStr,
         help="Password for calendar URL HTTP authentication (basic authentication)",
     )
-    arg_parser.add_argument("--calendar.encoding", default="UTF-8", help="Encoding of the calendar")
 
     # ---- Filtering ----
 
