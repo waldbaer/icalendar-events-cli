@@ -10,7 +10,7 @@ requires-python = ">=3.9"
 dependencies = [
     "tzlocal==5.3.1",
     "pytz==2025.2",
-    "recurring-ical-events==3.8.0",
+    "recurring-ical-events==3.8.1",
     "requests==2.32.5",
     "requests-file==3.0.1",
     "jsonargparse==4.42.0",
