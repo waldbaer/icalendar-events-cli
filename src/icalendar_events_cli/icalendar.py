@@ -37,95 +37,80 @@ def parse_calendar(calendar_ics: str, filter_config: dict) -> CalendarQuery:
     )
 
 
-def filter_events(events: CalendarQuery, filter_config: dict, encoding: str) -> CalendarQuery:
+def filter_events(events: CalendarQuery, filter_config: dict) -> CalendarQuery:
     """Filter the calendar.
 
     Arguments:
         events: Calendar to be filtered.
         filter_config: Filter config hierarchy
-        encoding: Summary attribute encoding
 
     Returns:
         CalendarQuery: Filtered calendar.
     """
     if filter_config.summary is not None:
         events = filter(
-            lambda event: (summary := get_event_summary(event, encoding)) is not None
-            and re.match(filter_config.summary, summary) is not None,
+            lambda event: (
+                (summary := get_event_summary(event)) is not None
+                and re.match(filter_config.summary, summary) is not None
+            ),
             events,
         )
 
     if filter_config.description is not None:
         events = filter(
-            lambda event: (description := get_event_description(event, encoding)) is not None
-            and re.match(filter_config.description, description) is not None,
+            lambda event: (
+                (description := get_event_description(event)) is not None
+                and re.match(filter_config.description, description) is not None
+            ),
             events,
         )
 
     if filter_config.location is not None:
         events = filter(
-            lambda event: (location := get_event_location(event, encoding)) is not None
-            and re.match(filter_config.location, location) is not None,
+            lambda event: (
+                (location := get_event_location(event)) is not None
+                and re.match(filter_config.location, location) is not None
+            ),
             events,
         )
 
     return events
 
 
-def get_event_string_attribute(event: Event, attribute_name: str, encoding: str) -> str:
-    """Get any string attribute from event.
-
-    Arguments:
-        event: Calendar Event.
-        attribute_name: Attribute name to be accessed.
-        encoding: Calender encoding.
-
-    Returns:
-        Decoded attribute value.
-    """
-    attribute = event.decoded(attribute_name, default=None)
-    if attribute is not None:
-        attribute = attribute.decode(encoding)
-    return attribute
-
-
-def get_event_summary(event: Event, encoding: str) -> str:
+def get_event_summary(event: Event) -> str:
     """Get 'SUMMARY' attribute of calendar event.
 
     Arguments:
         event: Calendar Event.
-        encoding: Calendar encoding
 
     Returns:
         Summary attribute.
     """
-    return get_event_string_attribute(event, "SUMMARY", encoding)
+    return event.decoded("SUMMARY", default=None)
 
 
-def get_event_description(event: Event, encoding: str) -> str:
+def get_event_description(event: Event) -> str:
     """Get 'DESCRIPTION' attribute of calendar event.
 
     Arguments:
         event: Calendar Event.
-        encoding: Calendar encoding
 
     Returns:
         Description attribute.
     """
-    return get_event_string_attribute(event, "DESCRIPTION", encoding)
+    return event.decoded("DESCRIPTION", default=None)
 
 
-def get_event_location(event: Event, encoding: str) -> str:
+def get_event_location(event: Event) -> str:
     """Get 'LOCATION' attribute of calendar event.
 
     Arguments:
         event: Calendar Event.
-        encoding: Calendar encoding
 
     Returns:
         Location attribute.
     """
-    return get_event_string_attribute(event, "LOCATION", encoding)
+    return event.decoded("LOCATION", default=None)
 
 
 def get_event_dtstart(event: Event) -> date:

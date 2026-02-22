@@ -7,7 +7,7 @@
       "request": "launch",
       "program": ".venv/bin/icalendar-events-cli",
       "args": ["--calendar.url", "https://www.thunderbird.net/media/caldata/autogen/GermanHolidays.ics",
-                "--filter.end-date", "2025-12-31",
+                "--filter.end-date", "2026-12-31",
                 "--filter.summary", ".*(Weihnacht|Oster).*"
       ],
       "justMyCode": true

@@ -56,13 +56,13 @@ def output_json(events: CalendarQuery, config: dict) -> None:
         event_output = {
             "start-date": get_event_dtstart(event).isoformat(),
             "end-date": get_event_dtend(event).isoformat(),
-            "summary": get_event_summary(event, config.calendar.encoding),
+            "summary": get_event_summary(event),
         }
-        description = get_event_description(event, config.calendar.encoding)
+        description = get_event_description(event)
         if description is not None:
             event_output["description"] = description
 
-        location = get_event_location(event, config.calendar.encoding)
+        location = get_event_location(event)
         if location is not None:
             event_output["location"] = location
         events_output.append(event_output)
@@ -99,9 +99,9 @@ def output_human_readable(events: CalendarQuery, config: dict) -> None:
     for event in events:
         start = get_event_dtstart(event)
         end = get_event_dtend(event)
-        summary = get_event_summary(event, config.calendar.encoding)
-        description = get_event_description(event, config.calendar.encoding)
-        location = get_event_location(event, config.calendar.encoding)
+        summary = get_event_summary(event)
+        description = get_event_description(event)
+        location = get_event_location(event)
 
         duration = end - start
         start_end_string = f"{start.isoformat()} -> {end.isoformat()} [{duration.total_seconds():.0f} sec]"
