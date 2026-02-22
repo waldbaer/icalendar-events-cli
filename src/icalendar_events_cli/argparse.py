@@ -5,7 +5,6 @@ import re
 import sys
 from argparse import ArgumentTypeError
 from datetime import datetime
-from typing import Optional
 
 import pytz
 from jsonargparse import ArgumentParser, DefaultHelpFormatter
@@ -25,7 +24,7 @@ class HelpFormatter(DefaultHelpFormatter, RawTextRichHelpFormatter):
     """Custom CLI help formatter: Combined DefaultHelpFormatter and RichHelpFormatter."""
 
 
-def parse_config(prog: str, version: str, copy_right: str, author: str, arg_list: Optional[list[str]] = None) -> dict:
+def parse_config(prog: str, version: str, copy_right: str, author: str, arg_list: list[str] | None = None) -> dict:
     """Parse the configuration from CLI and/or configuration JSON file.
 
     Arguments:
@@ -131,7 +130,7 @@ Also URLs to local files with schema file://<absolute path to local file> are su
     arg_parser.add_argument(
         "-o",
         "--output.file",
-        type=Optional[str],
+        type=str | None,
         help="Path of JSON output file. If not set the output is written to console / stdout",
     )
 
