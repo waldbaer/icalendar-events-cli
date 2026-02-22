@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2026-?-?
+
+### Breaking Changes
+
+* Minimum python version increased from 3.9 to 3.10
+* `--calendar.encoding` not supported anymore. Encoding defaults to `UTF-8`. Caused removed decoding functionality in icalendar 7.x
+
+
+### Dependencies
+
+* Bump icalendar from 6.3.2 to 7.0.1
+* Bump recurring-ical-events from 3.8.0 to 3.8.1
 
 ## [1.0.2] - 2025-11-01
 
