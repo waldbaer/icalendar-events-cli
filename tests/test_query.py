@@ -4,9 +4,8 @@ import os
 import re
 from base64 import b64encode
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from icalendar import Calendar
 import pytest
 import pytz
 from pytest_httpserver import HTTPServer
@@ -651,26 +650,6 @@ def test_ct_valid_query_outputformat_jcal(
     # Try to parse the output with iCalendar jCal
     # calendar = Calendar.from_jcal(json_output)
     # assert calendar is not None
-
-
-#
-# json_events = json_output["events"]
-# assert len(json_events) == len(expected_events)
-#
-# for events_index, expected_event in enumerate(expected_events):
-#    assert re.match(expected_event.summary, json_events[events_index]["summary"])
-#    assert expected_event.start_date.isoformat() == json_events[events_index]["start-date"]
-#    assert expected_event.end_date.isoformat() == json_events[events_index]["end-date"]
-#
-#    if expected_event.description is not None:
-#        assert re.match(expected_event.description, json_events[events_index]["description"])
-#    else:
-#        assert "description" not in json_events[events_index]
-#
-#    if expected_event.location is not None:
-#        assert re.match(expected_event.location, json_events[events_index]["location"])
-#    else:
-#        assert "location" not in json_events[events_index]
 
 
 @pytest.mark.parametrize(
