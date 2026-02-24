@@ -107,8 +107,14 @@ def output_jcal(calendar: Calendar, events: CalendarQuery, config: dict) -> None
             calendar_properties.append(item.to_jcal(key.lower()))
 
     # Add custom filter rules as meta-data to the calendar properties
-    calendar_properties.append(["x-filter-start-date", {}, "text", config.filter.start_date.isoformat()])
-    calendar_properties.append(["x-filter-end-date", {}, "text", config.filter.end_date.isoformat()])
+    calendar_properties.append(
+        [
+            "x-filter-date-range",
+            {},
+            "period",
+            [config.filter.start_date.isoformat(), config.filter.end_date.isoformat()],
+        ]
+    )
     if config.filter.summary:
         calendar_properties.append(["x-filter-summary", {}, "text", config.filter.summary])
     if config.filter.description:
