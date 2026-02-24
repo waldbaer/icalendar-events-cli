@@ -8,7 +8,7 @@
 
 ## Introduction
 
-This command-line tool allows users to query and filter [iCalendar (RFC 5545)](https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/) calendars. It leverages the excellent [recurring-ical-events](https://github.com/niccokunzmann/python-recurring-ical-events) library for parsing and querying the calendar contents.
+This command-line tool allows users to query and filter [iCalendar (RFC 5545)](https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/) calendars. It leverages the excellent [icalendar](https://github.com/collective/icalendar) and [recurring-ical-events](https://github.com/niccokunzmann/python-recurring-ical-events) libraries for parsing and querying the calendar contents.
 
 Leveraging the powerful [jsonargparse](https://jsonargparse.readthedocs.io/) library, this tool supports configuration and control via command-line parameters or a JSON configuration file.
 
@@ -20,7 +20,7 @@ Leveraging the powerful [jsonargparse](https://jsonargparse.readthedocs.io/) lib
   - by start- and end-date range
   - by event summary, description or location text (RegEx match)
 - Different Outputs
-  - Formats: JSON, human-readable (pretty printed)
+  - Formats: JSON, jCal ([RFC 7265](https://datatracker.ietf.org/doc/html/rfc7265)), human-readable (pretty printed)
   - Targets: shell (stdout), file
 
 ## Changelog
@@ -154,7 +154,7 @@ Details about all available options:
 
 ```
 Usage: icalendar-events-cli [-h] [--version] [-c CONFIG] --calendar.url URL [--calendar.verify-url {true,false}] [--calendar.user USER] [--calendar.password PASSWORD] [-s START_DATE]
-                            [-e END_DATE] [-f SUMMARY] [--filter.description DESCRIPTION] [--filter.location LOCATION] [--output.format {human_readable,json}] [-o FILE]
+                            [-e END_DATE] [-f SUMMARY] [--filter.description DESCRIPTION] [--filter.location LOCATION] [--output.format {human_readable,json,jcal}] [-o FILE]
 
 Command-line tool to read events from a iCalendar (ICS) files. | Version 2.0.0 | Copyright 2023-2026
 
@@ -182,7 +182,7 @@ Options:
                         RegEx to filter calendar events based on the description attribute. (type: regex_type, default: None)
   --filter.location LOCATION
                         RegEx to filter calendar events based on the location attribute. (type: regex_type, default: None)
-  --output.format {human_readable,json}
+  --output.format {human_readable,json,jcal}
                         Output format. (type: None, default: human_readable)
   -o, --output.file FILE
                         Path of JSON output file. If not set the output is written to console / stdout (type: None, default: None)
@@ -227,6 +227,5 @@ pdm publish --repository testpypi -u __token__
 ```
 
 ## Acknowledgments
-Special thanks to [recurring-ical-events](https://github.com/niccokunzmann/python-recurring-ical-events) for providing
-the core library that powers this tool.
+Special thanks to [icalendar](https://github.com/collective/icalendar) and [recurring-ical-events](https://github.com/niccokunzmann/python-recurring-ical-events) for providing the core libraries that power this tool.
 

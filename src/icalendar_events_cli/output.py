@@ -8,7 +8,14 @@ from enum import Enum
 
 from recurring_ical_events import CalendarQuery
 
-from .icalendar import get_event_description, get_event_dtend, get_event_dtstart, get_event_location, get_event_summary
+from .icalendar import (
+    Calendar,
+    get_event_description,
+    get_event_dtend,
+    get_event_dtstart,
+    get_event_location,
+    get_event_summary,
+)
 
 # ---- Functions -------------------------------------------------------------------------------------------------------
 
@@ -18,12 +25,14 @@ class OutputFormat(Enum):
 
     human_readable = "human_readable"  # pylint: disable=invalid-name;reason=camel_case style wanted for cli param
     json = "json"  # pylint: disable=invalid-name;reason=camel_case style wanted for cli param
+    jcal = "jcal"  # pylint: disable=invalid-name;reason=camel_case style wanted for cli param
 
 
-def output_events(events: CalendarQuery, config: dict) -> None:
+def output_events(calendar: Calendar, events: CalendarQuery, config: dict) -> None:
     """Output the calendar.
 
     Arguments:
+        calendar: The iCalendar calendar.
         events: Calendar events.
         config: Configuration hierarchy.
     """
@@ -31,6 +40,8 @@ def output_events(events: CalendarQuery, config: dict) -> None:
 
     if config.output.format == OutputFormat.json:
         output_json(sorted_events, config)
+    elif config.output.format == OutputFormat.jcal:
+        output_jcal(calendar, sorted_events, config)
     else:
         output_human_readable(sorted_events, config)
 
@@ -72,6 +83,56 @@ def output_json(events: CalendarQuery, config: dict) -> None:
     # Finally output the JSON hierarchy to stdout or the configured file
     if config.output.file is None:
         json.dump(json_hierarchy, fp=sys.stdout, indent=2, ensure_ascii=False)
+
+    else:
+        with open(config.output.file, "w", encoding="utf-8") as file:
+            json.dump(json_hierarchy, fp=file, indent=2, ensure_ascii=False)
+
+
+def output_jcal(calendar: Calendar, events: CalendarQuery, config: dict) -> None:
+    """Output the events in jCAL format (https://datatracker.ietf.org/doc/html/rfc7265).
+
+    Arguments:
+        calendar: The iCalendar calendar.
+        events: Calendar events.
+        config: Configuration hierarchy.
+    """
+    calendar_properties = []
+
+    # Get default iCalendar properties
+    for key, value in calendar.items():
+        for item in value if isinstance(value, list) else [value]:
+            calendar_properties.append(item.to_jcal(key.lower()))
+
+    # Add custom filter rules as meta-data to the calendar properties
+    calendar_properties.append(
+        [
+            "x-filter-date-range",
+            {},
+            "period",
+            [config.filter.start_date.isoformat(), config.filter.end_date.isoformat()],
+        ]
+    )
+    if config.filter.summary:
+        calendar_properties.append(["x-filter-summary", {}, "text", config.filter.summary])
+    if config.filter.description:
+        calendar_properties.append(["x-filter-description", {}, "text", config.filter.description])
+    if config.filter.location:
+        calendar_properties.append(["x-filter-location", {}, "text", config.filter.location])
+
+    # Build the jCal hierarchy
+    json_hierarchy = [
+        "vcalendar",
+        # Properties
+        calendar_properties,
+        # Components
+        [event.to_jcal() for event in events],
+    ]
+
+    # Finally output the JSON hierarchy to stdout or the configured file
+    if config.output.file is None:
+        json.dump(json_hierarchy, fp=sys.stdout, indent=2, ensure_ascii=False)
+
     else:
         with open(config.output.file, "w", encoding="utf-8") as file:
             json.dump(json_hierarchy, fp=file, indent=2, ensure_ascii=False)

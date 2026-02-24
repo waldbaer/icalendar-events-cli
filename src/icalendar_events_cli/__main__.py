@@ -6,7 +6,7 @@ import os
 
 from .argparse import parse_config
 from .downloader import download_ics
-from .icalendar import filter_events, parse_calendar
+from .icalendar import filter_events, parse_calendar, recurring_calendar
 from .output import output_events
 
 # ---- Module Meta-Data ------------------------------------------------------------------------------------------------
@@ -59,8 +59,9 @@ def _main_logic(config: dict) -> int:
         Numeric exit code
     """
     calendar_ics = download_ics(config.calendar)
-    events = parse_calendar(calendar_ics, config.filter)
+    calendar = parse_calendar(calendar_ics)
+    events = recurring_calendar(calendar, config.filter)
     events = filter_events(events, config.filter)
-    output_events(events, config)
+    output_events(calendar, events, config)
 
     return os.EX_OK
