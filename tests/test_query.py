@@ -4,8 +4,9 @@ import os
 import re
 from base64 import b64encode
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
+from icalendar import Calendar
 import pytest
 import pytz
 from pytest_httpserver import HTTPServer
@@ -519,6 +520,157 @@ def test_ct_valid_query_outputformat_json(
             assert re.match(expected_event.location, json_events[events_index]["location"])
         else:
             assert "location" not in json_events[events_index]
+
+
+@pytest.mark.parametrize(
+    "calendar_url,start_date,end_date,filter_summary,filter_description,filter_location,"
+    + "expected_events,username,password",
+    test_queries,
+)
+@pytest.mark.parametrize("output_file", [None, "icalendar_events_cli_test.json"])
+def test_ct_valid_query_outputformat_jcal(
+    calendar_url: str,
+    start_date: datetime,
+    end_date: datetime,
+    filter_summary: str,
+    filter_description: str,
+    filter_location: str,
+    expected_events: list[ExpectedEvent],
+    username: str,
+    password: str,
+    output_file: str | None,
+    httpserver: HTTPServer,
+    tmp_path: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test calendar queries with output format 'jCal'.
+
+    Arguments:
+        calendar_url: ICS calendar URL,
+        start_date: Start Date
+        end_date: End Date,
+        filter_summary: summary filter
+        filter_description: description filter
+        filter_location: location filter
+        expected_events: List of expected events
+        username: Username for basicAuth
+        password: Password for basicAuth
+        output_file: JSON output file name. If not set JSON output is written to console / stdout.
+        httpserver: Mocked HTTP server
+        tmp_path: Temporary unique file path provided by built-in fixture.
+        capsys: System capture
+    """
+    prepare_local_httpserver_mock(calendar_url, username, password, httpserver)
+
+    # Run icalendar-events-cli
+    calendar_url = httpserver.url_for(calendar_url)
+    output_path = f"{tmp_path}/{output_file}" if output_file else None
+    args = (
+        f"--output.format jcal --calendar.url {calendar_url}"
+        + build_basicauth_cli_arg(username, password)
+        + f" --filter.start-date {start_date.isoformat()} --filter.end-date {end_date.isoformat()}"
+        + build_filter_cli_arg(filter_summary, filter_description, filter_location)
+        + build_output_file_cli_arg(output_path)
+    )
+
+    cli_result = run_cli_json(args, capsys, output_path)
+    assert cli_result.exit_code == os.EX_OK
+
+    json_output = None
+    if output_path is None:
+        json_output = cli_result.stdout_as_json
+    else:
+        json_output = cli_result.fileout_as_json
+    assert json_output is not None
+
+    assert json_output[0] == "vcalendar"
+
+    # Verify jCal properties (meta-data)
+    jcal_properties = json_output[1]
+
+    assert any(
+        prop[0] == "x-filter-date-range"
+        and prop[1] == {}
+        and prop[2] == "period"
+        and prop[3] == [start_date.isoformat(), end_date.isoformat()]
+        for prop in jcal_properties
+    )
+    if filter_summary:
+        assert any(
+            prop[0] == "x-filter-summary" and prop[1] == {} and prop[2] == "text" and prop[3] == filter_summary
+            for prop in jcal_properties
+        )
+    if filter_description:
+        assert any(
+            prop[0] == "x-filter-description" and prop[1] == {} and prop[2] == "text" and prop[3] == filter_description
+            for prop in jcal_properties
+        )
+    if filter_location:
+        assert any(
+            prop[0] == "x-filter-location" and prop[1] == {} and prop[2] == "text" and prop[3] == filter_location
+            for prop in jcal_properties
+        )
+
+    # Verify jCal components (=filtered events)
+    jcal_components = json_output[2]
+    assert len(jcal_components) == len(expected_events)
+
+    for events_index, expected_event in enumerate(expected_events):
+        jcal_event = jcal_components[events_index]
+        assert jcal_event[0] == "vevent"
+        jcal_event_attribs = jcal_event[1]
+
+        assert any(
+            attrib[0] == "summary" and re.match(expected_event.summary, attrib[3]) for attrib in jcal_event_attribs
+        )
+        assert any(
+            attrib[0] == "dtstart" and re.match(expected_event.start_date.date().isoformat(), attrib[3])
+            for attrib in jcal_event_attribs
+        )
+        # assert any(
+        #    attrib[0] == "dtend" and re.match(expected_event.end_date.date().isoformat(), attrib[3])
+        #    for attrib in jcal_event_attribs
+        # )
+
+        if expected_event.description is not None:
+            assert any(
+                attrib[0] == "description" and re.match(expected_event.description, attrib[3])
+                for attrib in jcal_event_attribs
+            )
+        else:
+            assert not any(attrib[0] == "description" for attrib in jcal_event_attribs)
+
+        if expected_event.location is not None:
+            assert any(
+                attrib[0] == "location" and re.match(expected_event.location, attrib[3])
+                for attrib in jcal_event_attribs
+            )
+        else:
+            assert not any(attrib[0] == "location" for attrib in jcal_event_attribs)
+
+    # Try to parse the output with iCalendar jCal
+    # calendar = Calendar.from_jcal(json_output)
+    # assert calendar is not None
+
+
+#
+# json_events = json_output["events"]
+# assert len(json_events) == len(expected_events)
+#
+# for events_index, expected_event in enumerate(expected_events):
+#    assert re.match(expected_event.summary, json_events[events_index]["summary"])
+#    assert expected_event.start_date.isoformat() == json_events[events_index]["start-date"]
+#    assert expected_event.end_date.isoformat() == json_events[events_index]["end-date"]
+#
+#    if expected_event.description is not None:
+#        assert re.match(expected_event.description, json_events[events_index]["description"])
+#    else:
+#        assert "description" not in json_events[events_index]
+#
+#    if expected_event.location is not None:
+#        assert re.match(expected_event.location, json_events[events_index]["location"])
+#    else:
+#        assert "location" not in json_events[events_index]
 
 
 @pytest.mark.parametrize(

@@ -40,7 +40,7 @@ def output_events(calendar: Calendar, events: CalendarQuery, config: dict) -> No
 
     if config.output.format == OutputFormat.json:
         output_json(sorted_events, config)
-    if config.output.format == OutputFormat.jcal:
+    elif config.output.format == OutputFormat.jcal:
         output_jcal(calendar, sorted_events, config)
     else:
         output_human_readable(sorted_events, config)
@@ -64,7 +64,6 @@ def output_json(events: CalendarQuery, config: dict) -> None:
     # Detailed Events List
     events_output = []
     for event in events:
-        print(event.to_json())
         event_output = {
             "start-date": get_event_dtstart(event).isoformat(),
             "end-date": get_event_dtend(event).isoformat(),
@@ -77,8 +76,7 @@ def output_json(events: CalendarQuery, config: dict) -> None:
         location = get_event_location(event)
         if location is not None:
             event_output["location"] = location
-        # events_output.append(event_output)
-        # events_output.append(event.to_json())
+        events_output.append(event_output)
 
     json_hierarchy = {"filter": filters, "events": events_output}
 
