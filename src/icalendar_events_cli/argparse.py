@@ -148,11 +148,11 @@ def datetime_isoformat(arg: str) -> datetime:
     Arguments:
         arg: cli argument in ISO format
 
-    Raises:
-        ArgumentTypeError: in case the parsing failed
-
     Returns:
         Parsed datetime instance.
+
+    Raises:
+        ArgumentTypeError: in case the parsing failed
     """
     try:
         dt = datetime.fromisoformat(str(arg))
@@ -170,11 +170,11 @@ def regex_type(arg: str) -> str:
     Arguments:
         arg: cli argument to be checked
 
-    Raises:
-        ArgumentTypeError: in case the parsing failed
-
     Returns:
         unmodified string argument
+
+    Raises:
+        ArgumentTypeError: in case the parsing failed
     """
     try:
         re.compile(arg)
