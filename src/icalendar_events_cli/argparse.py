@@ -39,7 +39,8 @@ def parse_config(prog: str, version: str, copy_right: str, author: str, arg_list
     """
     arg_parser = ArgumentParser(
         prog=prog,
-        description="Command-line tool to read events from a iCalendar (ICS) files."
+        description="Command-line tool to read and filter events from iCalendar (RFC 5545) or "
+        + "jCal (RFC 7265) calendars."
         + f" | Version {version} | {copy_right}",
         version=f"| Version {version}\n{copy_right} {author}",
         default_config_files=["./config.json"],
@@ -56,7 +57,7 @@ def parse_config(prog: str, version: str, copy_right: str, author: str, arg_list
         "--calendar.url",
         type=str,
         required=True,
-        help="""URL of the iCalendar (ICS).
+        help="""URL of the calendar (iCalendar or jCal format).
 Also URLs to local files with schema file://<absolute path to local file> are supported.""",
     )
     arg_parser.add_argument(

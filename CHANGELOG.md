@@ -6,18 +6,18 @@ All notable changes to this project will be documented in this file.
 
 ### Breaking Changes
 
-* Minimum python version increased from 3.9 to 3.10
+* Minimum python version increased from 3.9 to 3.10 (#40)
 * `--calendar.encoding` not supported anymore. Encoding defaults to `UTF-8`.
-  Caused by removed decoding functionality in icalendar 7.x
+  Caused by removed decoding functionality in icalendar 7.x (#41)
 
 ### Features
 
-* Support [jCal](https://datatracker.ietf.org/doc/html/rfc7265) output format (`--output.format jcal`)
+* Support [jCal](https://datatracker.ietf.org/doc/html/rfc7265) input format (#50)
+* Support [jCal](https://datatracker.ietf.org/doc/html/rfc7265) output format (`--output.format jcal`) (#42)
 
 ### Dependencies
 
-* Bump icalendar from 6.3.2 to 7.0.1
-* Bump recurring-ical-events from 3.8.0 to 3.8.1
+* Bump recurring-ical-events from 3.8.0 to 3.8.1 (#39)
 
 ## [1.0.2] - 2025-11-01
 

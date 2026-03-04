@@ -67,15 +67,15 @@ def prepare_local_httpserver_mock(calendar_url: str, username: str, password: st
     """Prepare HTTP server mock.
 
     Arguments:
-        calendar_url: ICS calendar URL,
+        calendar_url: calendar URL
         username: Username for basicAuth
         password: Password for basicAuth
         httpserver: Mocked HTTP server
     """
-    local_file_path = f"tests/ics_examples{calendar_url}"
+    local_file_path = f"tests/calendar_examples{calendar_url}"
     local_file = open(local_file_path, encoding="UTF-8")
-    ics_file_content = local_file.read()
-    assert ics_file_content != ""
+    calendar_file_content = local_file.read()
+    assert calendar_file_content != ""
     expected_headers = None
     if username != "" and password != "":
         expected_headers = {
@@ -85,7 +85,7 @@ def prepare_local_httpserver_mock(calendar_url: str, username: str, password: st
     httpserver.expect_request(
         calendar_url,
         headers=expected_headers,
-    ).respond_with_data(ics_file_content)
+    ).respond_with_data(calendar_file_content)
 
 
 def build_basicauth_cli_arg(username: str, password: str) -> str:
@@ -404,6 +404,29 @@ test_queries = [
         "",
         "",
     ),
+    # ---- jCal input format ----
+    (
+        "/GermanHolidays.json",
+        # filter
+        localized_date_time(year=2025, month=10, day=3, hour=0, minute=0, second=0),
+        localized_date_time(year=2025, month=10, day=4, hour=23, minute=59, second=59),
+        ".*Einheit.*",
+        "",
+        "",
+        # expected events
+        [
+            ExpectedEvent(
+                summary="Tag der Deutschen Einheit",
+                description=".*Wiedervereinigung Deutschlands.*",
+                location=None,
+                start_date=localized_date_time(year=2025, month=10, day=3, hour=0, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=10, day=3, hour=23, minute=59, second=59),
+            )
+        ],
+        # no basicAuth
+        "",
+        "",
+    ),
     # ---- Other known issues ----
     # github issue #6
     (
@@ -455,9 +478,9 @@ def test_ct_valid_query_outputformat_json(
     """Test calendar queries with output format 'JSON'.
 
     Arguments:
-        calendar_url: ICS calendar URL,
+        calendar_url: calendar URL
         start_date: Start Date
-        end_date: End Date,
+        end_date: End Date
         filter_summary: summary filter
         filter_description: description filter
         filter_location: location filter
@@ -545,9 +568,9 @@ def test_ct_valid_query_outputformat_jcal(
     """Test calendar queries with output format 'jCal'.
 
     Arguments:
-        calendar_url: ICS calendar URL,
+        calendar_url: calendar URL
         start_date: Start Date
-        end_date: End Date,
+        end_date: End Date
         filter_summary: summary filter
         filter_description: description filter
         filter_location: location filter
@@ -679,9 +702,9 @@ def test_ct_valid_query_outputformat_humanreadable(
     """Test calendar queries with output format 'human readable'.
 
     Arguments:
-        calendar_url: ICS calendar URL,
+        calendar_url: calendar URL
         start_date: Start Date
-        end_date: End Date,
+        end_date: End Date
         filter_summary: summary filter
         filter_description: description filter
         filter_location: location filter
@@ -773,7 +796,7 @@ def test_ct_invalid_url(
 
 
 def test_ct_failing_server_response(httpserver: HTTPServer, capsys: pytest.CaptureFixture[str]) -> None:
-    """Test that ICS file download fails with HTTP error.
+    """Test that calendar file download fails with HTTP error.
 
     Arguments:
         httpserver: Mocked HTTP server
