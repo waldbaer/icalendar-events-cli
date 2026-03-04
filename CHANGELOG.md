@@ -12,8 +12,8 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
+* Support [jCal](https://datatracker.ietf.org/doc/html/rfc7265) input format (#50)
 * Support [jCal](https://datatracker.ietf.org/doc/html/rfc7265) output format (`--output.format jcal`) (#42)
-* Support [jCal](https://datatracker.ietf.org/doc/html/rfc7265) input format (#49)
 
 ### Dependencies
 
