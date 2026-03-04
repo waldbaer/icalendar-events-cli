@@ -125,7 +125,7 @@ Create `school-summer-vacation.json` containing calendar URL, summary filter and
 ```
 
 Query the calendar for summer vacation until end of next year:
-```json
+```bash
 icalendar-events-cli --config school-summer-vacation.json \
   --filter.end-date $(($(date +%Y) + 1))-12-31T23:59:59
 
@@ -285,13 +285,7 @@ pdm run tests
 
 ### Publish
 
-```bash
-# API token will be requested interactively as password
-pdm publish -u __token__
-
-# or to test.pypi.org
-pdm publish --repository testpypi -u __token__
-```
+Done automatically by github workflow / actions.
 
 ## Acknowledgments
 Special thanks to [icalendar](https://github.com/collective/icalendar) and [recurring-ical-events](https://github.com/niccokunzmann/python-recurring-ical-events) for providing the core libraries that power this tool.
