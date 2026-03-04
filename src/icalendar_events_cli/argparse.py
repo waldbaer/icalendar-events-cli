@@ -131,7 +131,7 @@ Also URLs to local files with schema file://<absolute path to local file> are su
         "-o",
         "--output.file",
         type=str | None,
-        help="Path of JSON output file. If not set the output is written to console / stdout",
+        help="Path of output file. If not set the output is written to console / stdout",
     )
 
     # ---- Finally parse the inputs  ----

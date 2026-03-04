@@ -240,9 +240,9 @@ Options:
   --calendar.password PASSWORD
                         Password for calendar URL HTTP authentication (basic authentication) (type: None, default: None)
   -s, --filter.start-date START_DATE
-                        Start date/time of event filter by time (ISO format). Default: now (type: datetime_isoformat, default: 2026-03-04 21:22:29+01:00)
+                        Start date/time of event filter by time (ISO format). Default: now (type: datetime_isoformat, default: now)
   -e, --filter.end-date END_DATE
-                        End date/time of event filter by time (ISO format). Default: end of today (type: datetime_isoformat, default: 2026-03-04 23:59:59+01:00)
+                        End date/time of event filter by time (ISO format). Default: end of today (type: datetime_isoformat, default: now)
   -f, --filter.summary SUMMARY
                         RegEx to filter calendar events based on the summary attribute. (type: regex_type, default: None)
   --filter.description DESCRIPTION
@@ -252,7 +252,7 @@ Options:
   --output.format {human_readable,json,jcal}
                         Output format. (type: None, default: human_readable)
   -o, --output.file FILE
-                        Path of JSON output file. If not set the output is written to console / stdout (type: None, default: None)
+                        Path of output file. If not set the output is written to console / stdout (type: None, default: None)
 ```
 
 
