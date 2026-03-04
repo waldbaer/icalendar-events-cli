@@ -1,6 +1,7 @@
 """Access to icalendar objects and hierarchies."""
 
 # ---- Imports ---------------------------------------------------------------------------------------------------------
+import json
 import re
 from datetime import date, datetime, timedelta
 
@@ -20,16 +21,36 @@ __local_timezone = pytz.timezone(get_localzone().key)
 # ---- Functions -------------------------------------------------------------------------------------------------------
 
 
-def parse_calendar(calendar_ics: str) -> Calendar:
+def parse_calendar(calendar_string: str) -> Calendar:
     """Parse the calendar.
 
     Arguments:
-        calendar_ics: Calendar RAW content string.
+        calendar_string: Calendar RAW content string.
 
     Returns:
         Calendar: Parsed iCalendar Calendar.
     """
-    return Calendar.from_ical(calendar_ics)
+    if has_jcal_format(calendar_string):
+        calendar = Calendar.from_jcal(calendar_string)
+    else:
+        calendar = Calendar.from_ical(calendar_string)
+    return calendar
+
+
+def has_jcal_format(calendar_string: str) -> bool:
+    """Determine if the calendar raw content string contains a calendar in jCal format (RFC 7265).
+
+    Arguments:
+        calendar_string: Calendar RAW content string.
+
+    Returns:
+        bool: True if jcal format was detected.
+    """
+    try:
+        json.loads(calendar_string)
+        return True
+    except (json.JSONDecodeError, OSError):
+        return False
 
 
 def recurring_calendar(calendar: Calendar, filter_config: dict) -> CalendarQuery:

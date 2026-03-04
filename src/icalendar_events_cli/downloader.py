@@ -1,4 +1,4 @@
-"""ICS calender file downloader."""
+"""Calender file downloader."""
 
 # ---- Imports ---------------------------------------------------------------------------------------------------------
 import sys
@@ -9,8 +9,8 @@ from requests_file import FileAdapter
 # ---- Functions -------------------------------------------------------------------------------------------------------
 
 
-def download_ics(calendard_config: dict) -> str:
-    """Download ICS calendar file from URL.
+def download_calendar(calendard_config: dict) -> str:
+    """Download calendar file from URL.
 
     Arguments:
         calendard_config: Calendar configuration hierarchy.

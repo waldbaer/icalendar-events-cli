@@ -8,14 +8,21 @@
 
 ## Introduction
 
-This command-line tool allows users to query and filter [iCalendar (RFC 5545)](https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/) calendars. It leverages the excellent [icalendar](https://github.com/collective/icalendar) and [recurring-ical-events](https://github.com/niccokunzmann/python-recurring-ical-events) libraries for parsing and querying the calendar contents.
+This command-line tool allows users to query and filter
+iCalendar ([RFC 5545](https://datatracker.ietf.org/doc/html/rfc5545)) or
+jCal ([RFC 7265](https://datatracker.ietf.org/doc/html/rfc7265)) or
+calendars.
+
+It leverages the excellent [icalendar](https://github.com/collective/icalendar) and
+[recurring-ical-events](https://github.com/niccokunzmann/python-recurring-ical-events) libraries
+for parsing and querying the calendar contents.
 
 Leveraging the powerful [jsonargparse](https://jsonargparse.readthedocs.io/) library, this tool supports configuration and control via command-line parameters or a JSON configuration file.
 
 ## Features ##
 - Download and parse iCalendar files
   - from remote HTTP URL (`https://<path to icalendar server>`)
-  - from local file URL (`file://<abs. path to local ICS file>`)
+  - from local file URL (`file://<abs. path to local iCalendar/ICS or jCal file>`)
 - Filtering
   - by start- and end-date range
   - by event summary, description or location text (RegEx match)
@@ -37,13 +44,13 @@ Changes can be followed at [CHANGELOG.md](https://github.com/waldbaer/icalendar-
 ## Setup
 
 ### With pip / pipx
-```
+```bash
 pip install icalendar-events-cli
 pipx install icalendar-events-cli
 ```
 
 ### Setup directly from github repo / clone
-```
+```bash
 git clone https://github.com/waldbaer/icalendar-events-cli.git
 cd icalendar-events-cli
 
@@ -79,31 +86,30 @@ platforms, such as [Node-RED](https://nodered.org/), which typically execute the
 - Use human-readable output format
 - Pass all parameters as command-line arguments
 
-```
+```bash
 icalendar-events-cli --calendar.url https://www.thunderbird.net/media/caldata/autogen/GermanHolidays.ics \
   --filter.start-date $(date +%Y)-01-01T02:00:00+02:00 \
   --filter.end-date $(date +%Y)-12-31T02:00:00+01:00 \
   --filter.summary ".*(Weihnacht|Oster).*"
-
-Start Date:         2025-01-01T02:00:00+02:00
-End Date:           2025-12-31T02:00:00+01:00
+Start Date:         2026-01-01T02:00:00+02:00
+End Date:           2026-12-31T02:00:00+01:00
 Summary Filter:     .*(Weihnacht|Oster).*
 Number of Events:   3
 
-2025-04-20T00:00:00+02:00 -> 2025-04-20T23:59:59+02:00 [86399 sec]     | Ostersonntag  (Brandenburg) | Description: Common local holiday -  Der Ostersonntag ist laut der christlichen Bibel ein Feiertag in Deutschland, um die Auferstehung Jesu Christi zu feiern.
-2025-04-21T00:00:00+02:00 -> 2025-04-21T23:59:59+02:00 [86399 sec]     | Ostermontag  | Description: Christian -  Viele Menschen in Deutschland begehen jÃ¤hrlich den Ostermontag am Tag nach dem Ostersonntag. Es ist in allen Bundesstaaten ein Feiertag.
-2025-12-25T00:00:00+01:00 -> 2025-12-25T23:59:59+01:00 [86399 sec]     | Weihnachten  | Description: Christian -  Der Weihnachtstag markiert die Geburt Jesu Christi und ist ein gesetzlicher Feiertag in Deutschland. Es ist jedes Jahr am 25. Dezember.
+2026-04-05T00:00:00+02:00 -> 2026-04-05T23:59:59+02:00 [86399 sec]     | Ostersonntag  (Brandenburg) | Description: Common local holiday -  Der Ostersonntag ist laut der christlichen Bibel ein Feiertag in Deutschland, um die Auferstehung Jesu Christi zu feiern.
+2026-04-06T00:00:00+02:00 -> 2026-04-06T23:59:59+02:00 [86399 sec]     | Ostermontag  | Description: Christian -  Viele Menschen in Deutschland begehen jÃ¤hrlich den Ostermontag am Tag nach dem Ostersonntag. Es ist in allen Bundesstaaten ein Feiertag.
+2026-12-25T00:00:00+01:00 -> 2026-12-25T23:59:59+01:00 [86399 sec]     | Weihnachten  | Description: Christian -  Der Weihnachtstag markiert die Geburt Jesu Christi und ist ein gesetzlicher Feiertag in Deutschland. Es ist jedes Jahr am 25. Dezember.
 ```
 
 #### Example 2: Query School Vacation Calendar
 
 The machine-readable JSON output format is designed for seamless integration with automation platforms, such as [Node-RED](https://nodered.org/), which typically execute the `icalendar-events-cli` tool.
 
-- Use JSON output format++
+- Use JSON output format
 - Mixed parameter configuration: Pass only end-date as command-line argument.
 
 Create `school-summer-vacation.json` containing calendar URL, summary filter and output format settings:
-```
+```json
 {
   "calendar" : {
       "url" : "https://www.feiertage-deutschland.de/kalender-download/ics/schulferien-baden-wuerttemberg.ics",
@@ -119,8 +125,9 @@ Create `school-summer-vacation.json` containing calendar URL, summary filter and
 ```
 
 Query the calendar for summer vacation until end of next year:
-```
-icalendar-events-cli --config school-summer-vacation.json --filter.end-date $(($(date +%Y) + 1))-12-31T23:59:59
+```json
+icalendar-events-cli --config school-summer-vacation.json \
+  --filter.end-date $(($(date +%Y) + 1))-12-31T23:59:59
 
 {
   "filter": {
@@ -147,16 +154,76 @@ icalendar-events-cli --config school-summer-vacation.json --filter.end-date $(($
 }
 ```
 
+#### Example 3: Convert iCalendar ([RFC 5545](https://datatracker.ietf.org/doc/html/rfc5545)) to jCal ([RFC 7265](https://datatracker.ietf.org/doc/html/rfc7265)) format
+
+- Use `jcal` output format
+
+```bash
+icalendar-events-cli --calendar.url https://www.thunderbird.net/media/caldata/autogen/GermanHolidays.ics \
+  --filter.start-date 1900-01-01T02:00:00+02:00 \
+  --filter.end-date 2500-12-31T02:00:00+01:00 \
+  --output.format jcal \
+  --output.file ./GermanHolidays.json
+```
+
+Example jCal contents of the converted `GermanHolidays.json`.
+The passed filter criterias are added as `x-filter-...` attributes to the jCal output (`x-filter-date-range`, `x-filter-summary`, `x-filter-description`, `x-filter-location`).
+```json
+[
+  "vcalendar",
+  [
+    ...
+    [
+      "x-filter-date-range",
+      {},
+      "period",
+      [
+        "1900-01-01T02:00:00+02:00",
+        "2500-12-31T02:00:00+01:00"
+      ]
+    ]
+  ],
+  [
+    [
+      "vevent",
+      [
+        [
+          "summary",
+          {},
+          "text",
+          "Neujahrstag "
+        ],
+  ...
+]
+```
+
+Parse and filter the converted jCal calendar again producing same result as the first example.
+```bash
+icalendar-events-cli --calendar.url file://$(pwd)/GermanHolidays.json \
+  --filter.start-date $(date +%Y)-01-01T02:00:00+02:00 \
+  --filter.end-date $(date +%Y)-12-31T02:00:00+01:00 \
+  --filter.summary ".*(Weihnacht|Oster).*"
+Start Date:         2026-01-01T02:00:00+02:00
+End Date:           2026-12-31T02:00:00+01:00
+Summary Filter:     .*(Weihnacht|Oster).*
+Number of Events:   3
+
+2026-04-05T00:00:00+02:00 -> 2026-04-05T23:59:59+02:00 [86399 sec]     | Ostersonntag  (Brandenburg) | Description: Common local holiday -  Der Ostersonntag ist laut der christlichen Bibel ein Feiertag in Deutschland, um die Auferstehung Jesu Christi zu feiern.
+2026-04-06T00:00:00+02:00 -> 2026-04-06T23:59:59+02:00 [86399 sec]     | Ostermontag  | Description: Christian -  Viele Menschen in Deutschland begehen jÃ¤hrlich den Ostermontag am Tag nach dem Ostersonntag. Es ist in allen Bundesstaaten ein Feiertag.
+2026-12-25T00:00:00+01:00 -> 2026-12-25T23:59:59+01:00 [86399 sec]     | Weihnachten  | Description: Christian -  Der Weihnachtstag markiert die Geburt Jesu Christi und ist ein gesetzlicher Feiertag in Deutschland. Es ist jedes Jahr am 25. Dezember.
+```
+
+
 
 ### All Available Parameters and Configuration Options
 
 Details about all available options:
 
-```
+```bash
 Usage: icalendar-events-cli [-h] [--version] [-c CONFIG] --calendar.url URL [--calendar.verify-url {true,false}] [--calendar.user USER] [--calendar.password PASSWORD] [-s START_DATE]
                             [-e END_DATE] [-f SUMMARY] [--filter.description DESCRIPTION] [--filter.location LOCATION] [--output.format {human_readable,json,jcal}] [-o FILE]
 
-Command-line tool to read events from a iCalendar (ICS) files. | Version 2.0.0 | Copyright 2023-2026
+Command-line tool to read and filter events from iCalendar (RFC 5545) or jCal (RFC 7265) calendars. | Version 2.0.0 | Copyright 2023-2026
 
 Default Config File Locations:
   ['./config.json'], Note: no existing default config file found.
@@ -165,7 +232,7 @@ Options:
   -h, --help            Show this help message and exit.
   --version             Print version and exit.
   -c, --config CONFIG   Path to JSON configuration file.
-  --calendar.url URL    URL of the iCalendar (ICS).
+  --calendar.url URL    URL of the calendar (iCalendar or jCal format).
                         Also URLs to local files with schema file://<absolute path to local file> are supported. (required, type: None)
   --calendar.verify-url {true,false}
                         Configure SSL verification of the URL (type: None, default: True)
@@ -173,9 +240,9 @@ Options:
   --calendar.password PASSWORD
                         Password for calendar URL HTTP authentication (basic authentication) (type: None, default: None)
   -s, --filter.start-date START_DATE
-                        Start date/time of event filter by time (ISO format). Default: now (type: datetime_isoformat, default: now)
+                        Start date/time of event filter by time (ISO format). Default: now (type: datetime_isoformat, default: 2026-03-04 21:22:29+01:00)
   -e, --filter.end-date END_DATE
-                        End date/time of event filter by time (ISO format). Default: end of today (type: datetime_isoformat, default: end of today)
+                        End date/time of event filter by time (ISO format). Default: end of today (type: datetime_isoformat, default: 2026-03-04 23:59:59+01:00)
   -f, --filter.summary SUMMARY
                         RegEx to filter calendar events based on the summary attribute. (type: regex_type, default: None)
   --filter.description DESCRIPTION
@@ -193,19 +260,19 @@ Options:
 
 ### Setup environment
 
-```
+```bash
 pdm install --dev
 ```
 
 ### Update dependencies to latest versions
 
-```
+```bash
 pdm update --unconstrained --save-exact --no-sync
 ```
 
 ### Format / Linter / Tests
 
-```
+```bash
 # Check code style
 pdm run format
 
@@ -218,7 +285,7 @@ pdm run tests
 
 ### Publish
 
-```
+```bash
 # API token will be requested interactively as password
 pdm publish -u __token__
 
