@@ -7,8 +7,12 @@ All notable changes to this project will be documented in this file.
 ### Breaking Changes
 
 * Minimum python version increased from 3.9 to 3.10
-* `--calendar.encoding` not supported anymore. Encoding defaults to `UTF-8`. Caused removed decoding functionality in icalendar 7.x
+* `--calendar.encoding` not supported anymore. Encoding defaults to `UTF-8`.
+  Caused by removed decoding functionality in icalendar 7.x
 
+### Features
+
+* Support [jCal](https://datatracker.ietf.org/doc/html/rfc7265) output format (`--output.format jcal`)
 
 ### Dependencies
 

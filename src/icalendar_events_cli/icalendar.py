@@ -4,9 +4,9 @@
 import re
 from datetime import date, datetime, timedelta
 
-import icalendar
 import pytz
 import recurring_ical_events
+from icalendar import Calendar
 from icalendar.cal import Event
 
 # https://urllib3.readthedocs.io/en/stable/user-guide.html
@@ -20,17 +20,28 @@ __local_timezone = pytz.timezone(get_localzone().key)
 # ---- Functions -------------------------------------------------------------------------------------------------------
 
 
-def parse_calendar(calendar_ics: str, filter_config: dict) -> CalendarQuery:
+def parse_calendar(calendar_ics: str) -> Calendar:
     """Parse the calendar.
 
     Arguments:
         calendar_ics: Calendar RAW content string.
+
+    Returns:
+        Calendar: Parsed iCalendar Calendar.
+    """
+    return Calendar.from_ical(calendar_ics)
+
+
+def recurring_calendar(calendar: Calendar, filter_config: dict) -> CalendarQuery:
+    """Parse the calendar.
+
+    Arguments:
+        calendar: iCalendar calendar.
         filter_config: Filter configuration hierarchy.
 
     Returns:
         CalendarQuery: Parsed CalendarQuery.
     """
-    calendar = icalendar.Calendar.from_ical(calendar_ics)
     calendar_components = ["VEVENT"]  # Only events
     return recurring_ical_events.of(calendar, components=calendar_components).between(
         filter_config.start_date, filter_config.end_date
