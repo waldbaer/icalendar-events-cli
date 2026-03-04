@@ -648,6 +648,9 @@ def test_ct_valid_query_outputformat_jcal(
             assert not any(attrib[0] == "location" for attrib in jcal_event_attribs)
 
     # Try to parse the output with iCalendar jCal
+    # Currently blocked by the following icalendar issues
+    # - https://github.com/collective/icalendar/issues/1237,
+    # - https://github.com/collective/icalendar/issues/1238
     # calendar = Calendar.from_jcal(json_output)
     # assert calendar is not None
 
