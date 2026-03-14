@@ -6,19 +6,19 @@ All notable changes to this project will be documented in this file.
 
 ### Breaking Changes
 
-* Minimum python version increased from 3.9 to 3.10 (#40)
+* Minimum python version increased from 3.9 to 3.10 ([#40](https://github.com/waldbaer/icalendar-events-cli/pull/40))
 * `--calendar.encoding` not supported anymore. Encoding defaults to `UTF-8`.
-  Caused by removed decoding functionality in icalendar 7.x (#41)
+  Caused by removed decoding functionality in icalendar 7.x ([#41](https://github.com/waldbaer/icalendar-events-cli/pull/41))
 
 ### Features
 
-* Support [jCal](https://datatracker.ietf.org/doc/html/rfc7265) input format (#50)
-* Support [jCal](https://datatracker.ietf.org/doc/html/rfc7265) output format (`--output.format jcal`) (#42)
+* Support [jCal](https://datatracker.ietf.org/doc/html/rfc7265) input format ([#50](https://github.com/waldbaer/icalendar-events-cli/pull/50))
+* Support [jCal](https://datatracker.ietf.org/doc/html/rfc7265) output format (`--output.format jcal`) ([#42](https://github.com/waldbaer/icalendar-events-cli/pull/42))
 
 ### Dependencies
 
-* Bump recurring-ical-events from 3.8.0 to 3.8.1 (#39)
-* Bump pytz from 2025.2 to 2026.1.post1 (#51)
+* Bump recurring-ical-events from 3.8.0 to 3.8.1 ([#39](https://github.com/waldbaer/icalendar-events-cli/pull/39))
+* Bump pytz from 2025.2 to 2026.1.post1 ([#51](https://github.com/waldbaer/icalendar-events-cli/pull/51))
 
 ## [1.0.2] - 2025-11-01
 
