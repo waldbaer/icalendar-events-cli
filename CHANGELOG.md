@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2.0.0] - 2026-?-?
+## [2.0.0] - 2026-03-14
 
 ### Breaking Changes
 
@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 ### Dependencies
 
 * Bump recurring-ical-events from 3.8.0 to 3.8.1 (#39)
+* Bump pytz from 2025.2 to 2026.1.post1 (#51)
 
 ## [1.0.2] - 2025-11-01
 
