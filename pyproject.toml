@@ -12,7 +12,7 @@ dependencies = [
     "pytz==2026.1.post1",
     "icalendar==7.0.3",
     "recurring-ical-events==3.8.1",
-    "requests==2.32.5",
+    "requests==2.33.0",
     "requests-file==3.0.1",
     "jsonargparse==4.42.0",
     "rich-argparse==1.7.2",
