@@ -6,8 +6,9 @@
       "type": "debugpy",
       "request": "launch",
       "program": ".venv/bin/icalendar-events-cli",
-      "args": ["--calendar.url", "https://www.thunderbird.net/media/caldata/autogen/GermanHolidays.ics",
-                "--filter.end-date", "2026-12-31",
+      "args": ["--calendar.url", "file://${workspaceFolder}/tests/calendar_examples/GermanHolidays.ics",
+                "--filter.start-date", "1970-01-01",
+                "--filter.end-date", "2040-12-31",
                 "--filter.summary", ".*(Weihnacht|Oster).*"
       ],
       "justMyCode": true
