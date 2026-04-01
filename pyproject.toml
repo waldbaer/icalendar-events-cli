@@ -31,7 +31,7 @@ lint = [
     "ruff==0.15.8",
 ]
 pytest = [
-    "pytest-cov==7.0.0",
+    "pytest-cov==7.1.0",
     "pytest-httpserver==1.1.5",
 ]
 
