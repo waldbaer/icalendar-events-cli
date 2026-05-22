@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 2026-05-22
+
+### Dependencies
+
+* Bump icalendar from 7.0.3 to 7.1.2
+* Bump recurring-ical-events from 3.8.1 to 3.8.2 ([#39](https://github.com/waldbaer/icalendar-events-cli/pull/58))
+* Bump requests from 2.33.0 to 2.33.1 in ([#55](https://github.com/waldbaer/icalendar-events-cli/pull/55))
+* Bump pydantic from 2.12.5 to 2.13.3 in ([#57](https://github.com/waldbaer/icalendar-events-cli/pull/57))
+
 ## [2.0.0] - 2026-03-14
 
 ### Breaking Changes
