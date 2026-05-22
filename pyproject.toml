@@ -14,7 +14,7 @@ dependencies = [
     "recurring-ical-events==3.8.2",
     "requests==2.34.2",
     "requests-file==3.0.1",
-    "jsonargparse==4.42.0",
+    "jsonargparse==4.49.0",
     "rich-argparse==1.7.2",
     "pydantic==2.13.4",
 ]
