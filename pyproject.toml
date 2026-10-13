@@ -9,8 +9,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "tzlocal==5.4.4",
-    "pytz==2026.2",
-    "icalendar==7.2.0",
+    "pytz==2026.5",
+    "icalendar==7.3.0",
     "recurring-ical-events==3.8.2",
     "requests==2.34.2",
     "requests-file==3.0.1",
@@ -32,7 +32,7 @@ lint = [
 ]
 pytest = [
     "pytest-cov==7.1.0",
-    "pytest-httpserver==1.1.5",
+    "pytest-httpserver==1.2.0",
 ]
 
 [project.urls]
