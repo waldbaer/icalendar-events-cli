@@ -46,7 +46,7 @@ def test_ct_version(capsys: pytest.CaptureFixture[str]) -> None:
     [
         (
             "",
-            r"calendar.url.*is required but not included",
+            r"the following arguments are required: calendar\.url",
         ),
         (
             "--filter.start-date 2025",

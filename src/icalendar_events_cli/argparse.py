@@ -3,7 +3,8 @@
 # ---- Imports ----
 import re
 import sys
-from argparse import ArgumentTypeError
+from argparse import Action, ArgumentTypeError
+from collections.abc import Iterable
 from datetime import datetime
 
 import pytz
@@ -22,6 +23,23 @@ _local_timezone = pytz.timezone(get_localzone().key)
 # ---- CommandLine parser ----------------------------------------------------------------------------------------------
 class HelpFormatter(DefaultHelpFormatter, RawTextRichHelpFormatter):
     """Custom CLI help formatter: Combined DefaultHelpFormatter and RichHelpFormatter."""
+
+    def _format_usage(self, usage: str | None, actions: Iterable[Action], *args: object, **kwargs: object) -> str:
+        """Format the usage.
+
+        RichHelpFormatter passes the actions as tuple, but DefaultHelpFormatter (jsonargparse >= 4.44.0)
+        requires a list.
+
+        Arguments:
+            usage: Usage string.
+            actions: Actions to be listed in the usage.
+            *args: Further positional arguments.
+            **kwargs: Further keyword arguments.
+
+        Returns:
+            Formatted usage.
+        """
+        return super()._format_usage(usage, list(actions), *args, **kwargs)
 
 
 def parse_config(prog: str, version: str, copy_right: str, author: str, arg_list: list[str] | None = None) -> dict:
