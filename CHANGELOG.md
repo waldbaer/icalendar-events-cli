@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.2] - 2026-10-15
+
+### Infrastructure
+
+* Add Python 3.15 to tested versions ([#74](https://github.com/waldbaer/icalendar-events-cli/pull/74))
+
+### Dependencies
+
+* Bump icalendar from 7.1.2 to 7.3.0 ([#66](https://github.com/waldbaer/icalendar-events-cli/pull/66), [#75](https://github.com/waldbaer/icalendar-events-cli/pull/75))
+* Bump pytz from 2026.2 to 2026.5 ([#75](https://github.com/waldbaer/icalendar-events-cli/pull/75))
+* Bump tzlocal from 5.3.1 to 5.4.4 ([#68](https://github.com/waldbaer/icalendar-events-cli/pull/68))
+* Bump jsonargparse from 4.42.0 to 4.52.0
+* Bump rich-argparse from 1.7.2 to 1.8.0 ([#72](https://github.com/waldbaer/icalendar-events-cli/pull/72))
+* Bump pydantic from 2.13.4 to 2.14.1 ([#70](https://github.com/waldbaer/icalendar-events-cli/pull/70))
+
 ## [2.0.1] - 2026-05-22
 
 ### Dependencies
