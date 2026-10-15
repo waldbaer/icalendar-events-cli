@@ -220,10 +220,12 @@ Number of Events:   3
 Details about all available options:
 
 ```bash
-Usage: icalendar-events-cli [-c CONFIG] --calendar.url URL [--calendar.verify-url {true,false}] [--calendar.user USER] [--calendar.password PASSWORD] [-s START_DATE] [-e END_DATE]
-                            [-f SUMMARY] [--filter.description DESCRIPTION] [--filter.location LOCATION] [--output.format {human_readable,json,jcal}] [-o FILE]
+Usage: icalendar-events-cli [-c CONFIG] --calendar.url URL [--calendar.verify-url {true,false}] [--calendar.user USER]
+                            [--calendar.password PASSWORD] [-s START_DATE] [-e END_DATE] [-f SUMMARY]
+                            [--filter.description DESCRIPTION] [--filter.location LOCATION]
+                            [--output.format {human_readable,json,jcal}] [-o FILE]
 
-Command-line tool to read and filter events from iCalendar (RFC 5545) or jCal (RFC 7265) calendars. | Version 2.0.0 | Copyright 2023-2026
+Command-line tool to read and filter events from iCalendar (RFC 5545) or jCal (RFC 7265) calendars. | Version 2.0.2 | Copyright 2023-2026
 
 Default Config File Locations:
   ['./config.json'], Note: no existing default config file found.
@@ -253,6 +255,7 @@ Options:
                         Output format. (type: None, default: human_readable)
   -o, --output.file FILE
                         Path of output file. If not set the output is written to console / stdout (type: None, default: None)
+
 ```
 
 
