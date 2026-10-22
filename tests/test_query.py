@@ -1,10 +1,12 @@
 """Test of general commands."""
 
+import json
 import os
 import re
 from base64 import b64encode
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 import pytz
@@ -99,6 +101,55 @@ def prepare_local_httpserver_mock(calendar_url: str, username: str, password: st
         calendar_url,
         headers=expected_headers,
     ).respond_with_data(calendar_file_content)
+
+
+def serve_calendar_bytes(httpserver: HTTPServer, path: str, data: bytes, content_type: str) -> str:
+    """Serve raw calendar bytes with exactly the given Content-Type header.
+
+    Arguments:
+        httpserver: Mocked HTTP server
+        path: URL path of the calendar
+        data: Raw calendar content
+        content_type: Content-Type header value, sent unchanged (no charset is added)
+
+    Returns:
+        URL of the served calendar
+    """
+    httpserver.expect_request(path).respond_with_data(data, content_type=content_type)
+    return httpserver.url_for(path)
+
+
+def query_single_event(
+    calendar_url: str,
+    start_date: datetime,
+    end_date: datetime,
+    filter_summary: str,
+    capsys: pytest.CaptureFixture[str],
+) -> dict:
+    """Run a query with output format 'JSON' that must succeed and match exactly one event.
+
+    Arguments:
+        calendar_url: calendar URL
+        start_date: Start Date
+        end_date: End Date
+        filter_summary: summary filter
+        capsys: System capture
+
+    Returns:
+        The matched event from the JSON output
+    """
+    args = (
+        f"--output.format json --calendar.url {calendar_url}"
+        + f" --filter.start-date {start_date.isoformat()} --filter.end-date {end_date.isoformat()}"
+        + build_filter_cli_arg(filter_summary, "", "")
+    )
+
+    cli_result = run_cli(args, capsys)
+    assert cli_result.exit_code == os.EX_OK, cli_result.stdout
+
+    json_events = json.loads(cli_result.stdout)["events"]
+    assert len(json_events) == 1
+    return json_events[0]
 
 
 def build_basicauth_cli_arg(username: str, password: str) -> str:
@@ -229,7 +280,7 @@ test_queries = [
         "",
         "",
     ),
-    # ---- Synthetic calendards with recurring events -------------------------
+    # ---- Synthetic calendars with recurring events -------------------------
     # Recurring daily with until date
     (
         "/recurring_events.ics",
@@ -781,6 +832,71 @@ def test_ct_valid_query_outputformat_humanreadable(
             assert re.match(f".*| {expected_event.description} |.*", events_output_lines[events_index])
         if expected_event.location is not None:
             assert re.match(f".*| {expected_event.location} |.*", events_output_lines[events_index])
+
+
+# ---- Text Decoding Tests ------------------------------------------------------------------------
+
+# Ostermontag 2025 in GermanHolidays.ics / .json. Its description contains "jährlich".
+ostermontag_2025_start = localized_date_time(year=2025, month=4, day=21, hour=0, minute=0, second=0)
+ostermontag_2025_end = localized_date_time(year=2025, month=4, day=21, hour=23, minute=59, second=59)
+
+test_text_decodings = [
+    pytest.param("GermanHolidays.ics", "utf-8", "text/calendar", "jährlich", id="utf8-without-charset"),
+    # The utf-8-sig codec prefixes the content with the UTF-8 byte order mark.
+    pytest.param("GermanHolidays.ics", "utf-8-sig", "text/calendar", "jährlich", id="utf8-bom-without-charset"),
+    pytest.param(
+        "GermanHolidays.ics",
+        "iso-8859-1",
+        "text/calendar; charset=ISO-8859-1",
+        "jährlich",
+        id="latin1-with-declared-charset",
+    ),
+    # Not valid UTF-8: the invalid byte is replaced with U+FFFD instead of aborting the query.
+    pytest.param("GermanHolidays.ics", "iso-8859-1", "text/calendar", "j\ufffdhrlich", id="latin1-without-charset"),
+    pytest.param(
+        "GermanHolidays.json", "utf-8", "application/calendar+json", "jährlich", id="jcal-utf8-without-charset"
+    ),
+]
+
+
+@pytest.mark.parametrize("calendar_file,encoding,content_type,expected_text", test_text_decodings)
+def test_ct_text_decoding_http(
+    calendar_file: str,
+    encoding: str,
+    content_type: str,
+    expected_text: str,
+    httpserver: HTTPServer,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test that calendars are decoded as UTF-8 unless the server declares a different charset.
+
+    Arguments:
+        calendar_file: UTF-8 calendar example file, re-encoded before it is served
+        encoding: Encoding of the served calendar content
+        content_type: Content-Type header sent by the server
+        expected_text: Text expected in the description
+        httpserver: Mocked HTTP server
+        capsys: System capture
+    """
+    calendar_content = Path(f"tests/calendar_examples/{calendar_file}").read_text(encoding="utf-8")
+    calendar_url = serve_calendar_bytes(
+        httpserver, f"/{calendar_file}", calendar_content.encode(encoding), content_type
+    )
+
+    event = query_single_event(calendar_url, ostermontag_2025_start, ostermontag_2025_end, "Ostermontag", capsys)
+    assert expected_text in event["description"]
+
+
+def test_ct_text_decoding_local_file(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test that a local calendar file (file:// URL) is decoded as UTF-8.
+
+    Arguments:
+        capsys: System capture
+    """
+    calendar_url = Path("tests/calendar_examples/GermanHolidays.ics").absolute().as_uri()
+
+    event = query_single_event(calendar_url, ostermontag_2025_start, ostermontag_2025_end, "Ostermontag", capsys)
+    assert "jährlich" in event["description"]
 
 
 # ---- Negative Tests -----------------------------------------------------------------------------
