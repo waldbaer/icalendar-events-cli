@@ -64,8 +64,10 @@ def recurring_calendar(calendar: Calendar, filter_config: dict) -> CalendarQuery
         CalendarQuery: Parsed CalendarQuery.
     """
     calendar_components = ["VEVENT"]  # Only events
+    # Floating date-times and all-day dates are read in the timezone of the window bounds.
+    # Converting the bounds to local time keeps their instants and reads these in local time, as in the output.
     return recurring_ical_events.of(calendar, components=calendar_components).between(
-        filter_config.start_date, filter_config.end_date
+        filter_config.start_date.astimezone(__local_timezone), filter_config.end_date.astimezone(__local_timezone)
     )
 
 
@@ -152,12 +154,13 @@ def get_event_dtstart(event: Event) -> date:
         event: Calendar Event.
 
     Returns:
-        Start Date.
+        Start Date. Full-day events and floating date-times (without timezone) are returned in local time.
     """
     start = event.decoded("DTSTART")
     if isinstance(start, date) and not isinstance(start, datetime):
         # Convert full-day event to datetime
         start = datetime.combine(start, datetime.min.time())
+    if start.tzinfo is None:
         start = __local_timezone.localize(start)
     return start
 
@@ -169,7 +172,7 @@ def get_event_dtend(event: Event) -> date:
         event: Calendar Event.
 
     Returns:
-        End Date.
+        End Date. Full-day events and floating date-times (without timezone) are returned in local time.
     """
     end = event.decoded("DTEND")
     if end.resolution == timedelta(days=1):
@@ -177,5 +180,6 @@ def get_event_dtend(event: Event) -> date:
         # Therefore subtract 1 day and then set time to end of day
         end -= timedelta(days=1)
         end = datetime.combine(end, datetime.max.time()).replace(microsecond=0)
+    if end.tzinfo is None:
         end = __local_timezone.localize(end)
     return end
