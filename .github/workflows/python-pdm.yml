@@ -11,8 +11,7 @@ env:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
-    continue-on-error: true
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false

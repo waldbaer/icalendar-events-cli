@@ -1,7 +1,6 @@
 """Utility for tool runner."""
 
 import json
-import os
 import shlex
 from dataclasses import dataclass
 from typing import Dict, List
@@ -80,7 +79,7 @@ def run_cli(cli_args: str, capsys: pytest.CaptureFixture, output_path: str | Non
     if output_path is not None:
         with open(file=output_path, encoding="UTF-8") as file:
             fileout_lines = file.readlines()
-            fileout = os.linesep.join(fileout_lines)
+            fileout = "".join(fileout_lines)
     return CliResult(
         exit_code, stdout, stderr, stdout_lines, stdout_as_json=None, fileout=fileout, fileout_lines=fileout_lines
     )

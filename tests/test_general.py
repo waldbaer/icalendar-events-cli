@@ -1,12 +1,12 @@
 """Test of general commands."""
 
 import importlib
-import os
 import re
 
 import pytest
 
 from icalendar_events_cli.__main__ import __dist_name__, __prog__
+from icalendar_events_cli.constants import Os
 from tests.util_runner import run_cli
 
 # ---- Testcases -------------------------------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ def test_ct_help(capsys: pytest.CaptureFixture[str]) -> None:
 
     cli_result = run_cli(args, capsys)
 
-    assert cli_result.exit_code == os.EX_OK
+    assert cli_result.exit_code == Os.EX_OK
     assert cli_result.stdout.startswith(f"Usage: {__prog__}")
 
 
@@ -36,7 +36,7 @@ def test_ct_version(capsys: pytest.CaptureFixture[str]) -> None:
 
     cli_result = run_cli(args, capsys)
 
-    assert cli_result.exit_code == os.EX_OK
+    assert cli_result.exit_code == Os.EX_OK
     assert importlib.metadata.version(__dist_name__) in cli_result.stdout
     assert importlib.metadata.version(__prog__) in cli_result.stdout
 
@@ -78,6 +78,6 @@ def test_ct_invalid_arguments(cli_args: str, expected_output: str, capsys: pytes
         capsys: System capture
     """
     cli_result = run_cli(cli_args, capsys)
-    assert cli_result.exit_code != os.EX_OK
+    assert cli_result.exit_code != Os.EX_OK
 
     assert re.search(expected_output, cli_result.stderr, re.MULTILINE)
