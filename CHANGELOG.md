@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.3] - Unreleased
+
+### Fixes
+
+* jCal output: Write x-filter-date-range in UTC. UTC offsets are not allowed by RFC 7265 and broke re-import ([#78](https://github.com/waldbaer/icalendar-events-cli/pull/78))
+
 ## [2.0.2] - 2026-10-15
 
 ### Infrastructure
