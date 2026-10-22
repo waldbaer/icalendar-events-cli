@@ -1,8 +1,10 @@
 """Test of general commands."""
 
+import io
 import json
 import re
 import shlex
+import sys
 from base64 import b64encode
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -14,6 +16,7 @@ from icalendar import Calendar
 from pytest_httpserver import HTTPServer
 from tzlocal import get_localzone
 
+from icalendar_events_cli.__main__ import cli
 from icalendar_events_cli.constants import Os
 from tests.util_runner import run_cli, run_cli_json
 
@@ -905,6 +908,122 @@ def test_ct_text_decoding_local_file(capsys: pytest.CaptureFixture[str]) -> None
 
     event = query_single_event(calendar_url, ostermontag_2025_start, ostermontag_2025_end, "Ostermontag", capsys)
     assert "jährlich" in event["description"]
+
+
+# ---- Output Encoding Tests ----------------------------------------------------------------------
+
+# Summary with a character of the cp1252 code page (ä) and one outside of it (🎉)
+encoding_test_summary = "jährlich 🎉"
+encoding_test_calendar = (
+    "BEGIN:VCALENDAR\r\n"
+    + "VERSION:2.0\r\n"
+    + "PRODID:-//icalendar-events-cli//tests//EN\r\n"
+    + "BEGIN:VEVENT\r\n"
+    + "UID:encoding-test@icalendar-events-cli\r\n"
+    + "DTSTAMP:20250101T000000Z\r\n"
+    + "DTSTART:20250115T100000Z\r\n"
+    + "DTEND:20250115T110000Z\r\n"
+    + f"SUMMARY:{encoding_test_summary}\r\n"
+    + "END:VEVENT\r\n"
+    + "END:VCALENDAR\r\n"
+)
+encoding_test_start = localized_date_time(year=2025, month=1, day=1, hour=0, minute=0, second=0)
+encoding_test_end = localized_date_time(year=2025, month=2, day=1, hour=0, minute=0, second=0)
+
+
+def run_cli_with_code_page_streams(cli_args: str, monkeypatch: pytest.MonkeyPatch) -> tuple[int, bytes, bytes]:
+    """Run the command line util with stdout and stderr encoded in the Windows code page cp1252.
+
+    Python 3.10 to 3.14 on Windows use the ANSI code page for piped streams, with errors="strict" on stdout and
+    errors="backslashreplace" on stderr. pytest's capsys always uses UTF-8, so it cannot be used here.
+
+    Arguments:
+        cli_args: The command line arguments string passed.
+        monkeypatch: Pytest monkeypatch fixture, used to replace sys.stdout and sys.stderr
+
+    Returns:
+        Exit code, bytes written to stdout and bytes written to stderr
+    """
+    stdout = io.TextIOWrapper(io.BytesIO(), encoding="cp1252", errors="strict")
+    stderr = io.TextIOWrapper(io.BytesIO(), encoding="cp1252", errors="backslashreplace")
+    monkeypatch.setattr(sys, "stdout", stdout)
+    monkeypatch.setattr(sys, "stderr", stderr)
+
+    exit_code = cli(shlex.split(cli_args))
+
+    stdout.flush()
+    stderr.flush()
+    return exit_code, stdout.buffer.getvalue(), stderr.buffer.getvalue()
+
+
+@pytest.mark.parametrize("output_format", ["json", "jcal", "human_readable"])
+def test_ct_stdout_encoding_code_page(
+    output_format: str, httpserver: HTTPServer, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that the result is written to stdout in UTF-8, even if stdout uses another code page.
+
+    Arguments:
+        output_format: Output format
+        httpserver: Mocked HTTP server
+        monkeypatch: Pytest monkeypatch fixture
+    """
+    calendar_url = serve_calendar_bytes(
+        httpserver, "/encoding.ics", encoding_test_calendar.encode("utf-8"), "text/calendar"
+    )
+    args = (
+        f"--calendar.url {calendar_url} --output.format {output_format}"
+        + f" --filter.start-date {encoding_test_start.isoformat()} --filter.end-date {encoding_test_end.isoformat()}"
+    )
+
+    exit_code, stdout, _ = run_cli_with_code_page_streams(args, monkeypatch)
+
+    assert exit_code == Os.EX_OK, stdout
+    assert encoding_test_summary.encode("utf-8") in stdout
+    stdout_text = stdout.decode("utf-8")
+    if output_format == "human_readable":
+        assert stdout_text.splitlines()[-1].endswith(f"| {encoding_test_summary}")
+    else:
+        # The output is a complete JSON document
+        assert encoding_test_summary in json.dumps(json.loads(stdout_text), ensure_ascii=False)
+
+
+def test_ct_stderr_encoding_code_page(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that error messages are written to stderr in UTF-8, even if stderr uses another code page.
+
+    Arguments:
+        monkeypatch: Pytest monkeypatch fixture
+    """
+    args = '--filter.summary "[🎉" --calendar.url=dummy'
+
+    exit_code, _, stderr = run_cli_with_code_page_streams(args, monkeypatch)
+
+    assert exit_code == 2  # argparse exit code for invalid arguments
+    assert "invalid RegEx value '[🎉'".encode() in stderr, stderr
+    # The error handler of the stream is kept
+    assert sys.stderr.errors == "backslashreplace"
+
+
+def test_ct_stdout_without_reconfigure(httpserver: HTTPServer, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that a stdout without reconfigure(), as set by an embedding application, is left unchanged.
+
+    Arguments:
+        httpserver: Mocked HTTP server
+        monkeypatch: Pytest monkeypatch fixture
+    """
+    calendar_url = serve_calendar_bytes(
+        httpserver, "/encoding.ics", encoding_test_calendar.encode("utf-8"), "text/calendar"
+    )
+    args = (
+        f"--calendar.url {calendar_url} --output.format json"
+        + f" --filter.start-date {encoding_test_start.isoformat()} --filter.end-date {encoding_test_end.isoformat()}"
+    )
+    stdout = io.StringIO()
+    monkeypatch.setattr(sys, "stdout", stdout)
+
+    exit_code = cli(shlex.split(args))
+
+    assert exit_code == Os.EX_OK, stdout.getvalue()
+    assert json.loads(stdout.getvalue())["events"][0]["summary"] == encoding_test_summary
 
 
 # ---- Negative Tests -----------------------------------------------------------------------------

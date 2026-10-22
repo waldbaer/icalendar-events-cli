@@ -77,6 +77,10 @@ The machine-readable JSON output format is designed for seamless integration wit
 platforms, such as [Node-RED](https://nodered.org/), which typically execute the
 `icalendar-events-cli` tool.
 
+The output is always encoded in UTF-8, on stdout as well as in output files, independent of the system locale and
+the console code page. This also applies on Windows, where Python would otherwise use the ANSI code page
+(e.g. cp1252) for piped output.
+
 
 
 ### Examples

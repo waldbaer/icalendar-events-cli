@@ -2,9 +2,10 @@
 
 # ---- Imports --------------------------------------------------------------------------------------------------------
 import importlib.metadata
+import sys
 
 from .argparse import parse_config
-from .constants import Os
+from .constants import Os, StringEncoding
 from .downloader import download_calendar
 from .icalendar import filter_events, parse_calendar, recurring_calendar
 from .output import output_events
@@ -21,6 +22,9 @@ __author__ = "Sebastian Waldvogel"
 def cli(arg_list: list[str] | None = None) -> int:
     """Main command line handling entry point.
 
+    Switches sys.stdout and sys.stderr of the process to UTF-8 first, so the result and all messages are UTF-8,
+    independent of the system locale and console code page.
+
     Arguments:
         arg_list: Optional list of command line arguments. Only needed for testing.
                   Productive __main__ will call the API without any argument.
@@ -29,6 +33,7 @@ def cli(arg_list: list[str] | None = None) -> int:
         Numeric exit code
     """
     try:
+        _use_utf8_streams()
         config = parse_config(
             prog=__prog__,
             version=importlib.metadata.version(__dist_name__),
@@ -47,6 +52,19 @@ def cli(arg_list: list[str] | None = None) -> int:
             # f"Detailed Traceback: {traceback.format_exc()}"
         )
         return Os.EX_ERROR
+
+
+def _use_utf8_streams() -> None:
+    """Switch sys.stdout and sys.stderr to UTF-8, keeping their error handlers and newline settings.
+
+    On Windows, Python 3.10 to 3.14 encode piped streams with the ANSI code page (e.g. cp1252). Streams without
+    reconfigure() (None under pythonw, or replaced by an embedding application) are left unchanged.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            # Pass errors explicitly: reconfigure() resets it to "strict" when only the encoding is given.
+            reconfigure(encoding=StringEncoding.UTF_8, errors=stream.errors)
 
 
 def _main_logic(config: dict) -> int:
