@@ -227,3 +227,8 @@ characters, where the duration is the number of whole seconds between start and 
 
 - **WHEN** a selected event has neither a description nor a location
 - **THEN** its line ends with ` | <summary>`
+
+#### Scenario: Event with description and location
+
+- **WHEN** a selected event has the description `Schulferien 2025` and the location `BW`
+- **THEN** its line ends with ` | <summary> | Description: Schulferien 2025 | Location: BW`
