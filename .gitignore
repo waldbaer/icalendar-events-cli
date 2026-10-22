@@ -142,3 +142,9 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Artificial Intelligence (AI)
+/.claude/skills/
+/.claude/agents/
+/.claude/commands/
+
