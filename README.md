@@ -97,7 +97,7 @@ Summary Filter:     .*(Weihnacht|Oster).*
 Number of Events:   3
 
 2026-04-05T00:00:00+02:00 -> 2026-04-05T23:59:59+02:00 [86399 sec]     | Ostersonntag  (Brandenburg) | Description: Common local holiday -  Der Ostersonntag ist laut der christlichen Bibel ein Feiertag in Deutschland, um die Auferstehung Jesu Christi zu feiern.
-2026-04-06T00:00:00+02:00 -> 2026-04-06T23:59:59+02:00 [86399 sec]     | Ostermontag  | Description: Christian -  Viele Menschen in Deutschland begehen jÃ¤hrlich den Ostermontag am Tag nach dem Ostersonntag. Es ist in allen Bundesstaaten ein Feiertag.
+2026-04-06T00:00:00+02:00 -> 2026-04-06T23:59:59+02:00 [86399 sec]     | Ostermontag  | Description: Christian -  Viele Menschen in Deutschland begehen jährlich den Ostermontag am Tag nach dem Ostersonntag. Es ist in allen Bundesstaaten ein Feiertag.
 2026-12-25T00:00:00+01:00 -> 2026-12-25T23:59:59+01:00 [86399 sec]     | Weihnachten  | Description: Christian -  Der Weihnachtstag markiert die Geburt Jesu Christi und ist ein gesetzlicher Feiertag in Deutschland. Es ist jedes Jahr am 25. Dezember.
 ```
 
@@ -210,7 +210,7 @@ Summary Filter:     .*(Weihnacht|Oster).*
 Number of Events:   3
 
 2026-04-05T00:00:00+02:00 -> 2026-04-05T23:59:59+02:00 [86399 sec]     | Ostersonntag  (Brandenburg) | Description: Common local holiday -  Der Ostersonntag ist laut der christlichen Bibel ein Feiertag in Deutschland, um die Auferstehung Jesu Christi zu feiern.
-2026-04-06T00:00:00+02:00 -> 2026-04-06T23:59:59+02:00 [86399 sec]     | Ostermontag  | Description: Christian -  Viele Menschen in Deutschland begehen jÃ¤hrlich den Ostermontag am Tag nach dem Ostersonntag. Es ist in allen Bundesstaaten ein Feiertag.
+2026-04-06T00:00:00+02:00 -> 2026-04-06T23:59:59+02:00 [86399 sec]     | Ostermontag  | Description: Christian -  Viele Menschen in Deutschland begehen jährlich den Ostermontag am Tag nach dem Ostersonntag. Es ist in allen Bundesstaaten ein Feiertag.
 2026-12-25T00:00:00+01:00 -> 2026-12-25T23:59:59+01:00 [86399 sec]     | Weihnachten  | Description: Christian -  Der Weihnachtstag markiert die Geburt Jesu Christi und ist ein gesetzlicher Feiertag in Deutschland. Es ist jedes Jahr am 25. Dezember.
 ```
 
