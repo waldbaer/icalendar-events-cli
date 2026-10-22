@@ -212,7 +212,7 @@ def _validate_config(config: dict) -> None:
 
     if config.filter.start_date > config.filter.end_date:
         found_config_issues.append(
-            "filter.end-date must be after filter.start-state"
+            "filter.end-date must be after filter.start-date"
             + f" (configured: {config.filter.start_date} -> {config.filter.end_date})"
         )
 

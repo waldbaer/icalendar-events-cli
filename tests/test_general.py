@@ -55,12 +55,12 @@ def test_ct_version(capsys: pytest.CaptureFixture[str]) -> None:
         (
             "--filter.start-date 2025-01-17T10:00:00+01:00 --filter.end-date 2025-01-17T08:00:00+01:00 "
             + "--calendar.url=dummy",
-            r"filter\.end-date must be after filter\.start-state",
+            r"filter\.end-date must be after filter\.start-date",
         ),
         # compare localized and not-localized dates
         (
             "--filter.start-date 2025-10-08 --filter.end-date 2025-10-06T08:00:00+01:00 --calendar.url=dummy",
-            r"filter\.end-date must be after filter\.start-state",
+            r"filter\.end-date must be after filter\.start-date",
         ),
         # invalid summary filter RegEx
         (
