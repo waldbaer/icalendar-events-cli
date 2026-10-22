@@ -4,10 +4,11 @@ import os
 import re
 from base64 import b64encode
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 import pytz
+from icalendar import Calendar
 from pytest_httpserver import HTTPServer
 from tzlocal import get_localzone
 
@@ -47,6 +48,18 @@ class ExpectedEvent:
         self.location = location
         self.start_date = start_date
         self.end_date = end_date
+
+
+def to_jcal_utc_date_time(date_time: datetime) -> str:
+    """Format a datetime as jCal UTC date-time value (RFC 7265, section 3.6.5).
+
+    Arguments:
+        date_time: Timezone aware datetime instance.
+
+    Returns:
+        jCal date-time string in UTC (e.g. '2025-01-01T23:00:00Z').
+    """
+    return date_time.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def localized_date_time(*args: any, **kwargs: any) -> datetime:
@@ -614,7 +627,7 @@ def test_ct_valid_query_outputformat_jcal(
         prop[0] == "x-filter-date-range"
         and prop[1] == {}
         and prop[2] == "period"
-        and prop[3] == [start_date.isoformat(), end_date.isoformat()]
+        and prop[3] == [to_jcal_utc_date_time(start_date), to_jcal_utc_date_time(end_date)]
         for prop in jcal_properties
     )
     if filter_summary:
@@ -670,12 +683,10 @@ def test_ct_valid_query_outputformat_jcal(
         else:
             assert not any(attrib[0] == "location" for attrib in jcal_event_attribs)
 
-    # Try to parse the output with iCalendar jCal
-    # Currently blocked by the following icalendar issues
-    # - https://github.com/collective/icalendar/issues/1237,
-    # - https://github.com/collective/icalendar/issues/1238
-    # calendar = Calendar.from_jcal(json_output)
-    # assert calendar is not None
+    # Re-import the jCal output with icalendar
+    calendar = Calendar.from_jcal(json_output)
+    assert calendar["x-filter-date-range"].dt == (start_date, end_date)
+    assert len(calendar.events) == len(expected_events)
 
 
 @pytest.mark.parametrize(

@@ -4,8 +4,10 @@
 import json
 import os
 import sys
+from datetime import timezone
 from enum import Enum
 
+from icalendar import vPeriod
 from recurring_ical_events import CalendarQuery
 
 from .icalendar import (
@@ -104,15 +106,12 @@ def output_jcal(calendar: Calendar, events: CalendarQuery, config: dict) -> None
         for item in value if isinstance(value, list) else [value]:
             calendar_properties.append(item.to_jcal(key.lower()))
 
-    # Add custom filter rules as meta-data to the calendar properties
-    calendar_properties.append(
-        [
-            "x-filter-date-range",
-            {},
-            "period",
-            [config.filter.start_date.isoformat(), config.filter.end_date.isoformat()],
-        ]
+    # Add custom filter rules as meta-data to the calendar properties.
+    # jCal does not allow UTC offsets in date-time values (RFC 7265, section 3.6.5), so the range is written in UTC.
+    filter_date_range = vPeriod(
+        (config.filter.start_date.astimezone(timezone.utc), config.filter.end_date.astimezone(timezone.utc))
     )
+    calendar_properties.append(filter_date_range.to_jcal("x-filter-date-range"))
     if config.filter.summary:
         calendar_properties.append(["x-filter-summary", {}, "text", config.filter.summary])
     if config.filter.description:

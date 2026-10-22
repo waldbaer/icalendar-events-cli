@@ -168,6 +168,7 @@ icalendar-events-cli --calendar.url https://www.thunderbird.net/media/caldata/au
 
 Example jCal contents of the converted `GermanHolidays.json`.
 The passed filter criterias are added as `x-filter-...` attributes to the jCal output (`x-filter-date-range`, `x-filter-summary`, `x-filter-description`, `x-filter-location`).
+The `x-filter-date-range` is written in UTC, because jCal does not allow UTC offsets in date-time values.
 ```json
 [
   "vcalendar",
@@ -178,8 +179,8 @@ The passed filter criterias are added as `x-filter-...` attributes to the jCal o
       {},
       "period",
       [
-        "1900-01-01T02:00:00+02:00",
-        "2500-12-31T02:00:00+01:00"
+        "1900-01-01T00:00:00Z",
+        "2500-12-31T01:00:00Z"
       ]
     ]
   ],
