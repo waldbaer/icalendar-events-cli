@@ -473,6 +473,58 @@ test_queries = [
         "",
         "",
     ),
+    # ---- Floating date-times (without timezone) ----
+    # Floating times are read as local time
+    (
+        "/floating_events.ics",
+        # filter
+        localized_date_time(year=2025, month=7, day=1, hour=0, minute=0, second=0),
+        localized_date_time(year=2025, month=7, day=31, hour=23, minute=59, second=59),
+        "floating_summer",
+        "",
+        "",
+        # expected events
+        [
+            ExpectedEvent(
+                summary="floating_summer",
+                start_date=localized_date_time(year=2025, month=7, day=5, hour=10, minute=0, second=0),
+                end_date=localized_date_time(year=2025, month=7, day=5, hour=11, minute=0, second=0),
+            ),
+        ],
+        # no basicAuth
+        "",
+        "",
+    ),
+    # Floating and timezone-aware events, ordered by their start instants.
+    # The window adds a day on each side of 2025-01-05, so it selects both events in any local timezone.
+    (
+        "/floating_events.ics",
+        # filter
+        localized_date_time(year=2025, month=1, day=4, hour=0, minute=0, second=0),
+        localized_date_time(year=2025, month=1, day=6, hour=23, minute=59, second=59),
+        "",
+        "",
+        "",
+        # expected events
+        sorted(
+            [
+                ExpectedEvent(
+                    summary="floating_winter",
+                    start_date=localized_date_time(year=2025, month=1, day=5, hour=10, minute=0, second=0),
+                    end_date=localized_date_time(year=2025, month=1, day=5, hour=11, minute=0, second=0),
+                ),
+                ExpectedEvent(
+                    summary="utc_event",
+                    start_date=datetime(year=2025, month=1, day=5, hour=9, minute=30, second=0, tzinfo=timezone.utc),
+                    end_date=datetime(year=2025, month=1, day=5, hour=10, minute=30, second=0, tzinfo=timezone.utc),
+                ),
+            ],
+            key=lambda event: event.start_date,
+        ),
+        # no basicAuth
+        "",
+        "",
+    ),
     # ---- jCal input format ----
     (
         "/GermanHolidays.json",
@@ -843,6 +895,117 @@ def test_ct_valid_query_outputformat_humanreadable(
             assert re.search(rf" \| Location: {expected_event.location}", event_line)
         else:
             assert " | Location: " not in event_line
+
+
+# ---- Floating Date-Time Tests -------------------------------------------------------------------
+
+
+def test_ct_floating_event_outputformat_jcal(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test that jCal output keeps floating date-times floating, as in the source calendar.
+
+    Arguments:
+        capsys: System capture
+    """
+    calendar_url = Path("tests/calendar_examples/floating_events.ics").absolute().as_uri()
+    start_date = localized_date_time(year=2025, month=7, day=1, hour=0, minute=0, second=0)
+    end_date = localized_date_time(year=2025, month=7, day=31, hour=23, minute=59, second=59)
+    args = (
+        f"--output.format jcal --calendar.url {calendar_url}"
+        + f" --filter.start-date {start_date.isoformat()} --filter.end-date {end_date.isoformat()}"
+        + build_filter_cli_arg("floating_summer", "", "")
+    )
+
+    cli_result = run_cli_json(args, capsys)
+    assert cli_result.exit_code == Os.EX_OK
+
+    jcal_components = cli_result.stdout_as_json[2]
+    assert len(jcal_components) == 1
+    jcal_dtstart = [attrib for attrib in jcal_components[0][1] if attrib[0] == "dtstart"]
+    # No tzid parameter
+    assert jcal_dtstart == [["dtstart", {}, "date-time", "2025-07-05T10:00:00"]]
+
+
+# ---- Time Window Tests --------------------------------------------------------------------------
+
+# Windows in local time, passed to the CLI in UTC
+test_time_windows_in_utc = [
+    # floating_winter: 2025-01-05 10:00 to 11:00 local time
+    pytest.param(
+        "floating_events.ics",
+        "floating_winter",
+        localized_date_time(year=2025, month=1, day=5, hour=10, minute=30, second=0),
+        localized_date_time(year=2025, month=1, day=5, hour=10, minute=45, second=0),
+        ["floating_winter"],
+        id="floating-inside",
+    ),
+    pytest.param(
+        "floating_events.ics",
+        "floating_winter",
+        localized_date_time(year=2025, month=1, day=5, hour=11, minute=30, second=0),
+        localized_date_time(year=2025, month=1, day=5, hour=11, minute=45, second=0),
+        [],
+        id="floating-outside",
+    ),
+    # Tag der Deutschen Einheit: all-day event on 2025-10-03
+    pytest.param(
+        "GermanHolidays.ics",
+        ".*Einheit.*",
+        localized_date_time(year=2025, month=10, day=3, hour=0, minute=30, second=0),
+        localized_date_time(year=2025, month=10, day=3, hour=0, minute=45, second=0),
+        ["Tag der Deutschen Einheit"],
+        id="all-day-inside",
+    ),
+    pytest.param(
+        "GermanHolidays.ics",
+        ".*Einheit.*",
+        localized_date_time(year=2025, month=10, day=4, hour=1, minute=30, second=0),
+        localized_date_time(year=2025, month=10, day=4, hour=1, minute=45, second=0),
+        [],
+        id="all-day-outside",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "calendar_file,filter_summary,local_start_date,local_end_date,expected_summaries", test_time_windows_in_utc
+)
+def test_ct_time_window_in_utc(
+    calendar_file: str,
+    filter_summary: str,
+    local_start_date: datetime,
+    local_end_date: datetime,
+    expected_summaries: list[str],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test that floating date-times and all-day dates are selected in local time, also for a window given in UTC.
+
+    Arguments:
+        calendar_file: Calendar example file
+        filter_summary: summary filter
+        local_start_date: Start of the window in local time
+        local_end_date: End of the window in local time
+        expected_summaries: Summaries of the expected events
+        capsys: System capture
+    """
+    calendar_url = Path(f"tests/calendar_examples/{calendar_file}").absolute().as_uri()
+    start_date = local_start_date.astimezone(timezone.utc)
+    end_date = local_end_date.astimezone(timezone.utc)
+    args = (
+        f"--output.format json --calendar.url {calendar_url}"
+        + f" --filter.start-date {start_date.isoformat()} --filter.end-date {end_date.isoformat()}"
+        + build_filter_cli_arg(filter_summary, "", "")
+    )
+
+    cli_result = run_cli_json(args, capsys)
+    assert cli_result.exit_code == Os.EX_OK
+
+    # The filter is output as given
+    json_filter = cli_result.stdout_as_json["filter"]
+    assert json_filter["start-date"] == start_date.isoformat()
+    assert json_filter["end-date"] == end_date.isoformat()
+
+    json_events = cli_result.stdout_as_json["events"]
+    assert [event["summary"] for event in json_events] == expected_summaries
 
 
 # ---- Text Decoding Tests ------------------------------------------------------------------------

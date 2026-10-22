@@ -49,7 +49,8 @@ The tool SHALL produce the format selected by `output.format`: `human_readable` 
 ### Requirement: Event start and end values
 
 In the JSON and human-readable formats, the start and end of each event SHALL be written as ISO 8601 date-times with
-a UTC offset. Timed events SHALL keep the timezone the calendar gives them. All-day events SHALL start at 00:00:00 local
+a UTC offset. Timed events SHALL keep the timezone the calendar gives them. Timed events with floating date-times
+(without timezone) SHALL be written in the system's local timezone. All-day events SHALL start at 00:00:00 local
 time on their first day and end at 23:59:59 local time on their last day, the last day being the day before the
 event's exclusive `DTEND`.
 
@@ -73,6 +74,12 @@ event's exclusive `DTEND`.
 
 - **WHEN** an event has `DTSTART;TZID=Europe/Berlin:20250101T190000`
 - **THEN** its start is `2025-01-01T19:00:00+01:00`
+
+#### Scenario: Floating event
+
+- **WHEN** an event has `DTSTART:20250705T100000` and `DTEND:20250705T110000` and the system timezone is
+  Europe/Berlin
+- **THEN** its start is `2025-07-05T10:00:00+02:00` and its end is `2025-07-05T11:00:00+02:00`
 
 ### Requirement: JSON output format
 
@@ -178,6 +185,11 @@ a `recurrence-id` identifying that occurrence.
   window
 - **THEN** the components contain two `vevent` entries whose `dtstart` and `recurrence-id` are `2025-01-01T09:00:00`
   and `2025-01-08T09:00:00` with the `tzid` parameter `Europe/Berlin`
+
+#### Scenario: Floating event
+
+- **WHEN** a selected event has `DTSTART:20250705T100000`
+- **THEN** its `vevent` has the `dtstart` `2025-07-05T10:00:00` without a `tzid` parameter, as in the source calendar
 
 ### Requirement: jCal output can be read back
 

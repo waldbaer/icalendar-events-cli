@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 * Calendar download: Decode calendars without a declared charset as UTF-8 (RFC 5545) instead of ISO-8859-1 and ignore a leading byte order mark ([#80](https://github.com/waldbaer/icalendar-events-cli/pull/80))
 * Human-readable output: Show the event location instead of the description in the `Location:` field ([#81](https://github.com/waldbaer/icalendar-events-cli/pull/81))
 * Fixes for Windows OS ([#82](https://github.com/waldbaer/icalendar-events-cli/pull/82), [#83](https://github.com/waldbaer/icalendar-events-cli/pull/83))
+* Floating event times: Read date-times without timezone as local time in the time window selection and the JSON and human-readable output. Queries that also select events with a timezone no longer abort ([#84](https://github.com/waldbaer/icalendar-events-cli/pull/84))
+* All-day events: Select all-day events in local time also for time windows given in another UTC offset ([#84](https://github.com/waldbaer/icalendar-events-cli/pull/84))
 
 ### Infrastructure
 
