@@ -2,7 +2,6 @@
 
 # ---- Imports ---------------------------------------------------------------------------------------------------------
 import json
-import os
 import sys
 from datetime import timezone
 from enum import Enum
@@ -154,7 +153,7 @@ def output_human_readable(events: CalendarQuery, config: dict) -> None:
         output.append(f"Description Filter: {config.filter.description}")
     if config.filter.location:
         output.append(f"Location Filter:    {config.filter.location}")
-    output.append(f"Number of Events:   {len(events)}{os.linesep}")
+    output.append(f"Number of Events:   {len(events)}\n")
 
     for event in events:
         start = get_event_dtstart(event)
@@ -170,8 +169,9 @@ def output_human_readable(events: CalendarQuery, config: dict) -> None:
 
         output.append(f"{start_end_string: <70} | {summary}{opt_description_string}{opt_location_string}")
 
-    # build final output string incl. line separators
-    output = os.linesep.join(output)
+    # Build final output string. Use "\n", not os.linesep: text-mode stdout and files already translate "\n" to the
+    # platform line ending, so os.linesep would produce "\r\r\n" on Windows.
+    output = "\n".join(output)
 
     # Finally output to stdout or the configured file
     if config.output.file is None:
