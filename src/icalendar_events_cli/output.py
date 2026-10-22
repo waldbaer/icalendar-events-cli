@@ -9,6 +9,7 @@ from enum import Enum
 from icalendar import vPeriod
 from recurring_ical_events import CalendarQuery
 
+from .constants import Os, StringEncoding
 from .icalendar import (
     Calendar,
     get_event_description,
@@ -86,7 +87,7 @@ def output_json(events: CalendarQuery, config: dict) -> None:
         json.dump(json_hierarchy, fp=sys.stdout, indent=2, ensure_ascii=False)
 
     else:
-        with open(config.output.file, "w", encoding="utf-8") as file:
+        with open(config.output.file, "w", encoding=StringEncoding.UTF_8) as file:
             json.dump(json_hierarchy, fp=file, indent=2, ensure_ascii=False)
 
 
@@ -132,7 +133,7 @@ def output_jcal(calendar: Calendar, events: CalendarQuery, config: dict) -> None
         json.dump(json_hierarchy, fp=sys.stdout, indent=2, ensure_ascii=False)
 
     else:
-        with open(config.output.file, "w", encoding="utf-8") as file:
+        with open(config.output.file, "w", encoding=StringEncoding.UTF_8) as file:
             json.dump(json_hierarchy, fp=file, indent=2, ensure_ascii=False)
 
 
@@ -153,7 +154,7 @@ def output_human_readable(events: CalendarQuery, config: dict) -> None:
         output.append(f"Description Filter: {config.filter.description}")
     if config.filter.location:
         output.append(f"Location Filter:    {config.filter.location}")
-    output.append(f"Number of Events:   {len(events)}\n")
+    output.append(f"Number of Events:   {len(events)}{Os.linesep}")
 
     for event in events:
         start = get_event_dtstart(event)
@@ -169,15 +170,14 @@ def output_human_readable(events: CalendarQuery, config: dict) -> None:
 
         output.append(f"{start_end_string: <70} | {summary}{opt_description_string}{opt_location_string}")
 
-    # Build final output string. Use "\n", not os.linesep: text-mode stdout and files already translate "\n" to the
-    # platform line ending, so os.linesep would produce "\r\r\n" on Windows.
-    output = "\n".join(output)
+    # build final output string incl. line separators
+    output = Os.linesep.join(output)
 
     # Finally output to stdout or the configured file
     if config.output.file is None:
         print(output)
     else:
-        with open(config.output.file, "w", encoding="utf-8") as file:
+        with open(config.output.file, "w", encoding=StringEncoding.UTF_8) as file:
             file.write(output)
 
 

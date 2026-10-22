@@ -1,7 +1,6 @@
 """Test of general commands."""
 
 import json
-import os
 import re
 import shlex
 from base64 import b64encode
@@ -15,6 +14,7 @@ from icalendar import Calendar
 from pytest_httpserver import HTTPServer
 from tzlocal import get_localzone
 
+from icalendar_events_cli.constants import Os
 from tests.util_runner import run_cli, run_cli_json
 
 
@@ -146,7 +146,7 @@ def query_single_event(
     )
 
     cli_result = run_cli(args, capsys)
-    assert cli_result.exit_code == os.EX_OK, cli_result.stdout
+    assert cli_result.exit_code == Os.EX_OK, cli_result.stdout
 
     json_events = json.loads(cli_result.stdout)["events"]
     assert len(json_events) == 1
@@ -572,7 +572,7 @@ def test_ct_valid_query_outputformat_json(
     )
 
     cli_result = run_cli_json(args, capsys, output_path)
-    assert cli_result.exit_code == os.EX_OK
+    assert cli_result.exit_code == Os.EX_OK
 
     json_output = None
     if output_path is None:
@@ -662,7 +662,7 @@ def test_ct_valid_query_outputformat_jcal(
     )
 
     cli_result = run_cli_json(args, capsys, output_path)
-    assert cli_result.exit_code == os.EX_OK
+    assert cli_result.exit_code == Os.EX_OK
 
     json_output = None
     if output_path is None:
@@ -794,7 +794,7 @@ def test_ct_valid_query_outputformat_humanreadable(
     )
 
     cli_result = run_cli(args, capsys, output_path)
-    assert cli_result.exit_code == os.EX_OK
+    assert cli_result.exit_code == Os.EX_OK
 
     output_lines = None
     if output_path is None:
@@ -926,7 +926,7 @@ def test_ct_invalid_url(
 
     cli_result = run_cli(args, capsys)
 
-    assert cli_result.exit_code != 0
+    assert cli_result.exit_code != Os.EX_OK
     assert "Max retries exceeded with url" in cli_result.stdout
 
 
@@ -949,6 +949,6 @@ def test_ct_failing_server_response(httpserver: HTTPServer, capsys: pytest.Captu
     )
 
     cli_result = run_cli(args, capsys)
-    assert cli_result.exit_code != os.EX_OK
+    assert cli_result.exit_code != Os.EX_OK
 
     assert "Failed to download ical contents from URL" in cli_result.stdout

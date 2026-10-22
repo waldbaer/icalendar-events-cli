@@ -7,9 +7,7 @@ from email.message import Message
 import requests
 from requests_file import FileAdapter
 
-# ---- Globals ---------------------------------------------------------------------------------------------------------
-DEFAULT_CHARSET = "utf-8"  # RFC 5545, section 3.1.4
-BYTE_ORDER_MARK = "\ufeff"
+from .constants import Os, StringEncoding
 
 # ---- Functions -------------------------------------------------------------------------------------------------------
 
@@ -37,10 +35,11 @@ def download_calendar(calendar_config: dict) -> str:
             f"ERROR: Failed to download ical contents from URL '{response.url}'. "
             + f"Response status: {response.reason} (status {response.status_code})",
         )
-        sys.exit(1)
+        sys.exit(Os.EX_ERROR)
 
-    response.encoding = _get_declared_charset(response) or DEFAULT_CHARSET
-    return response.text.removeprefix(BYTE_ORDER_MARK)
+    # Default charset: RFC 5545, section 3.1.4
+    response.encoding = _get_declared_charset(response) or StringEncoding.UTF_8
+    return response.text.removeprefix(StringEncoding.BYTE_ORDER_MARK)
 
 
 def _get_declared_charset(response: requests.Response) -> str | None:

@@ -13,6 +13,7 @@ from pydantic import SecretStr
 from rich_argparse import RawTextRichHelpFormatter
 from tzlocal import get_localzone
 
+from .constants import Os
 from .output import OutputFormat
 
 # ---- Globals ---------------------------------------------------------------------------------------------------------
@@ -221,4 +222,4 @@ def _validate_config(config: dict) -> None:
         print("ERROR: invalid configuration / parameters:", file=sys.stderr)
         for found_config_issue in found_config_issues:
             print(f"- {found_config_issue}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(Os.EX_ERROR)

@@ -2,9 +2,9 @@
 
 # ---- Imports --------------------------------------------------------------------------------------------------------
 import importlib.metadata
-import os
 
 from .argparse import parse_config
+from .constants import Os
 from .downloader import download_calendar
 from .icalendar import filter_events, parse_calendar, recurring_calendar
 from .output import output_events
@@ -43,10 +43,10 @@ def cli(arg_list: list[str] | None = None) -> int:
 
     except BaseException as e:  # pylint: disable=broad-exception-caught;reason=Explicitly capture all exceptions thrown during execution.
         print(
-            f"ERROR: Any error has occurred!{os.linesep}{os.linesep}Exception: {str(e)}"
+            f"ERROR: Any error has occurred!{Os.linesep}{Os.linesep}Exception: {str(e)}"
             # f"Detailed Traceback: {traceback.format_exc()}"
         )
-        return 1
+        return Os.EX_ERROR
 
 
 def _main_logic(config: dict) -> int:
@@ -64,4 +64,4 @@ def _main_logic(config: dict) -> int:
     events = filter_events(events, config.filter)
     output_events(calendar, events, config)
 
-    return os.EX_OK
+    return Os.EX_OK
