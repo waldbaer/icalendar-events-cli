@@ -166,7 +166,7 @@ def output_human_readable(events: CalendarQuery, config: dict) -> None:
         duration = end - start
         start_end_string = f"{start.isoformat()} -> {end.isoformat()} [{duration.total_seconds():.0f} sec]"
         opt_description_string = f" | Description: {description}" if description is not None else ""
-        opt_location_string = f" | Location: {description}" if location is not None else ""
+        opt_location_string = f" | Location: {location}" if location is not None else ""
 
         output.append(f"{start_end_string: <70} | {summary}{opt_description_string}{opt_location_string}")
 

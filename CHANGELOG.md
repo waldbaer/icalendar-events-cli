@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 * jCal output: Write x-filter-date-range in UTC. UTC offsets are not allowed by RFC 7265 and broke re-import ([#78](https://github.com/waldbaer/icalendar-events-cli/pull/78))
 * Calendar download: Decode calendars without a declared charset as UTF-8 (RFC 5545) instead of ISO-8859-1 and ignore a leading byte order mark ([#80](https://github.com/waldbaer/icalendar-events-cli/pull/80))
+* Human-readable output: Show the event location instead of the description in the `Location:` field ([#81](https://github.com/waldbaer/icalendar-events-cli/pull/81))
 
 ## [2.0.2] - 2026-10-15
 

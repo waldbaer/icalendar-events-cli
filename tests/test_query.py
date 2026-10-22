@@ -824,14 +824,20 @@ def test_ct_valid_query_outputformat_humanreadable(
     assert len(events_output_lines) == len(expected_events)
 
     for events_index, expected_event in enumerate(expected_events):
+        event_line = events_output_lines[events_index]
         expected_start_end = f"{expected_event.start_date.isoformat()} -> {expected_event.end_date.isoformat()}"
-        assert events_output_lines[events_index].startswith(expected_start_end)
+        assert event_line.startswith(expected_start_end)
 
-        assert re.match(f".*| {expected_event.summary} |.*", events_output_lines[events_index])
+        # Expected values are regex patterns. The "|" separators are escaped so they are not read as alternation.
+        assert re.search(rf" \| {expected_event.summary}", event_line)
         if expected_event.description is not None:
-            assert re.match(f".*| {expected_event.description} |.*", events_output_lines[events_index])
+            assert re.search(rf" \| Description: {expected_event.description}", event_line)
+        else:
+            assert " | Description: " not in event_line
         if expected_event.location is not None:
-            assert re.match(f".*| {expected_event.location} |.*", events_output_lines[events_index])
+            assert re.search(rf" \| Location: {expected_event.location}", event_line)
+        else:
+            assert " | Location: " not in event_line
 
 
 # ---- Text Decoding Tests ------------------------------------------------------------------------
