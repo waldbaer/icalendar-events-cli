@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import shlex
 from base64 import b64encode
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -200,7 +201,8 @@ def build_output_file_cli_arg(output_path: str | None) -> str:
     """
     cli_arg = ""
     if output_path is not None:
-        cli_arg = f" --output.file={output_path} "
+        # Quote the path, otherwise shlex.split() drops the backslashes of Windows paths
+        cli_arg = f" --output.file={shlex.quote(output_path)} "
     return cli_arg
 
 
