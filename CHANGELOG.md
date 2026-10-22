@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixes
 
-* jCal output: `x-filter-date-range` is now written in UTC (e.g. `2025-01-01T00:00:00Z`). jCal (RFC 7265) does not allow UTC offsets like `+01:00`, so the jCal output could not be re-imported, not even by icalendar-events-cli itself.
+* jCal output: Write x-filter-date-range in UTC. UTC offsets are not allowed by RFC 7265 and broke re-import ([#78](https://github.com/waldbaer/icalendar-events-cli/pull/78))
 
 ## [2.0.2] - 2026-10-15
 
